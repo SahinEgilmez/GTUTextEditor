@@ -1,4 +1,4 @@
-package editor;
+package tr.edu.gtu.cse.gte;
 
 /**
  * @author Sahin Egilmez

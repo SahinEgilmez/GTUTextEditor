@@ -1,4 +1,4 @@
-package editor;
+package tr.edu.gtu.cse.gte;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -6,7 +6,6 @@ import javafx.scene.control.TextArea;
 import javafx.stage.FileChooser;
 
 import java.io.File;
-import java.nio.file.Path;
 import java.util.Arrays;
 
 /**
@@ -63,5 +62,12 @@ public class Controller {
         alert.setTitle("About");
         alert.setContentText("This is a simple text editor App");
         alert.show();
+    }
+
+    @FXML
+    private void onBurak() {
+
+
+        System.out.println("ENES BABA");
     }
 }

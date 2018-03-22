@@ -1,4 +1,4 @@
-package editor;
+package tr.edu.gtu.cse.gte;
 
 import java.nio.file.Path;
 import java.util.List;

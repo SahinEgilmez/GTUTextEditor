@@ -1,4 +1,4 @@
-package editor;
+package tr.edu.gtu.cse.gte;
 
 import java.io.IOException;
 import java.nio.file.Files;

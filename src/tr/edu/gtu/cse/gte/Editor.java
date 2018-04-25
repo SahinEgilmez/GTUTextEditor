@@ -1,12 +1,9 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package tr.edu.gtu.cse.gte;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
-import javax.swing.text.AbstractDocument;
-import javax.swing.text.StyledDocument;
 
 /**
  *
@@ -14,43 +11,11 @@ import javax.swing.text.StyledDocument;
  */
 public class Editor extends javax.swing.JFrame {
 
-    final String KEYWORDS_FILE = "keywords";
-
-    private AbstractDocument doc;
-    private List<String> keywords;
-
     /**
      * Creates new form Editor
      */
     public Editor() {
         initComponents();
-        loadKeywords();
-        setDocumentFilter();
-    }
-
-    /**
-     * Loads C&C++ keywords from KEYWORDS_FILE.
-     */
-    private void loadKeywords() {
-        try {
-            keywords = Files.readAllLines(Paths.get(KEYWORDS_FILE),
-                    StandardCharsets.UTF_8);
-        } catch (IOException ignore) {}
-    }
-
-    /**
-     * Sets document filter to our special implementation GTEDocumentFilter.
-     */
-    private void setDocumentFilter() {
-        StyledDocument styledDoc = textPane.getStyledDocument();
-        if (styledDoc instanceof AbstractDocument) {
-            doc = (AbstractDocument)styledDoc;
-            doc.setDocumentFilter(new GTEDocumentFilter(keywords));
-        } else {
-            System.err.println("Text pane's document"
-                    + " isn't an AbstractDocument!");
-            System.exit(1);
-        }
     }
 
     /**
@@ -62,23 +27,168 @@ public class Editor extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jSplitPane2 = new javax.swing.JSplitPane();
+        jSplitPane1 = new javax.swing.JSplitPane();
+        jTabbedPane1 = new javax.swing.JTabbedPane();
         jScrollPane1 = new javax.swing.JScrollPane();
-        textPane = new javax.swing.JTextPane();
+        jTextPane1 = new javax.swing.JTextPane();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        jTextPane2 = new javax.swing.JTextPane();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        jTree1 = new javax.swing.JTree();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        jTextArea1 = new javax.swing.JTextArea();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
+        jMenuItem3 = new javax.swing.JMenuItem();
+        menuItemOpen = new javax.swing.JMenuItem();
+        jSeparator1 = new javax.swing.JPopupMenu.Separator();
+        jMenuItem1 = new javax.swing.JMenuItem();
+        jMenuItem2 = new javax.swing.JMenuItem();
+        jSeparator2 = new javax.swing.JPopupMenu.Separator();
+        jMenuItem5 = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
+        jMenuItem4 = new javax.swing.JMenuItem();
+        jMenuItem6 = new javax.swing.JMenuItem();
+        jSeparator3 = new javax.swing.JPopupMenu.Separator();
+        jMenuItem7 = new javax.swing.JMenuItem();
+        jMenuItem8 = new javax.swing.JMenuItem();
+        jMenuItem9 = new javax.swing.JMenuItem();
+        jMenuItem10 = new javax.swing.JMenuItem();
+        jSeparator4 = new javax.swing.JPopupMenu.Separator();
+        jMenuItem11 = new javax.swing.JMenuItem();
+        jMenu3 = new javax.swing.JMenu();
+        jMenuItem12 = new javax.swing.JMenuItem();
+        jMenuItem13 = new javax.swing.JMenuItem();
+        jMenu4 = new javax.swing.JMenu();
+        jMenuItem14 = new javax.swing.JMenuItem();
+        jMenuItem15 = new javax.swing.JMenuItem();
+        jMenu5 = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("GTU Text Editor");
         setPreferredSize(new java.awt.Dimension(600, 400));
 
-        jScrollPane1.setViewportView(textPane);
+        jSplitPane2.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
+
+        jTextPane1.setText("burasi tab 1");
+        jScrollPane1.setViewportView(jTextPane1);
+
+        jTabbedPane1.addTab("tab1", jScrollPane1);
+
+        jTextPane2.setText("TAB 2 BURASI");
+        jScrollPane2.setViewportView(jTextPane2);
+
+        jTabbedPane1.addTab("tab2", jScrollPane2);
+
+        jSplitPane1.setRightComponent(jTabbedPane1);
+
+        jTree1.setAutoscrolls(true);
+        jTree1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        jTree1.setDebugGraphicsOptions(javax.swing.DebugGraphics.BUFFERED_OPTION);
+        jScrollPane4.setViewportView(jTree1);
+
+        jSplitPane1.setLeftComponent(jScrollPane4);
+
+        jSplitPane2.setLeftComponent(jSplitPane1);
+
+        jTextArea1.setColumns(20);
+        jTextArea1.setLineWrap(true);
+        jTextArea1.setRows(5);
+        jTextArea1.setText("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc at pulvinar urna. Vestibulum sagittis venenatis fringilla. Pellentesque auctor erat et nisl iaculis, aliquam vestibulum est fermentum. Cras quis dictum mi. Fusce cursus tempor sapien, at eleifend quam bibendum vitae. Nulla facilisi. Praesent quis porttitor urna. Vestibulum iaculis laoreet tortor, ac pulvinar nisl porttitor nec. Suspendisse sed sapien sit amet magna viverra pretium ut a felis. Nulla at metus sed augue fringilla pretium. Nulla malesuada cursus eros at euismod. Morbi venenatis pharetra augue, at cursus nunc gravida eu. Sed consectetur felis eu ante bibendum dapibus. Sed non efficitur ex.  Fusce quis efficitur purus. Donec semper ante nec urna volutpat, ac varius nulla ultrices. Integer dapibus nulla in facilisis venenatis. Phasellus auctor condimentum viverra. Suspendisse nulla nulla, sagittis et aliquet eget, rhoncus nec ex. Etiam tempus, nibh ac faucibus ultricies, nisi turpis cursus urna, non suscipit nibh dui eu leo. Nulla nec massa neque. Fusce vitae tortor tortor. Sed condimentum massa et lobortis commodo. Mauris aliquam dui in justo pulvinar accumsan. Morbi blandit, mauris non sagittis sodales, felis nisi suscipit nisi, eget commodo diam nisl vel odio. Aliquam varius nisi sit amet purus pharetra, vel blandit nulla dignissim.  Morbi ultricies tempor odio vel convallis. Proin odio felis, eleifend id erat eu, egestas vestibulum velit. Fusce suscipit enim nec justo fringilla efficitur. Curabitur eget dolor in velit condimentum pretium. Sed finibus vehicula tortor, id consequat leo convallis a. Praesent at felis ornare, suscipit neque eget, sollicitudin magna. Suspendisse et faucibus turpis, id ultricies lorem. Mauris sollicitudin varius ipsum non eleifend. Nam erat urna, varius ac ultricies iaculis, hendrerit id massa. Fusce luctus nibh a congue feugiat. Nulla tincidunt risus non turpis vulputate vehicula.");
+        jTextArea1.setDisabledTextColor(new java.awt.Color(0, 0, 0));
+        jTextArea1.setEnabled(false);
+        jTextArea1.setFocusable(false);
+        jScrollPane3.setViewportView(jTextArea1);
+
+        jSplitPane2.setRightComponent(jScrollPane3);
 
         jMenu1.setText("File");
+
+        jMenuItem3.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_N, java.awt.event.InputEvent.CTRL_MASK));
+        jMenuItem3.setText("New");
+        jMenu1.add(jMenuItem3);
+
+        menuItemOpen.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
+        menuItemOpen.setText("Open");
+        jMenu1.add(menuItemOpen);
+        jMenu1.add(jSeparator1);
+
+        jMenuItem1.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_MASK));
+        jMenuItem1.setText("Save");
+        jMenu1.add(jMenuItem1);
+
+        jMenuItem2.setText("Save As");
+        jMenu1.add(jMenuItem2);
+        jMenu1.add(jSeparator2);
+
+        jMenuItem5.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F4, java.awt.event.InputEvent.ALT_MASK));
+        jMenuItem5.setText("Exit");
+        jMenuItem5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem5ActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItem5);
+
         jMenuBar1.add(jMenu1);
 
         jMenu2.setText("Edit");
+
+        jMenuItem4.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Z, java.awt.event.InputEvent.CTRL_MASK));
+        jMenuItem4.setText("Undo");
+        jMenu2.add(jMenuItem4);
+
+        jMenuItem6.setText("Redo");
+        jMenu2.add(jMenuItem6);
+        jMenu2.add(jSeparator3);
+
+        jMenuItem7.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.event.InputEvent.CTRL_MASK));
+        jMenuItem7.setText("Cut");
+        jMenu2.add(jMenuItem7);
+
+        jMenuItem8.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.event.InputEvent.CTRL_MASK));
+        jMenuItem8.setText("Copy");
+        jMenu2.add(jMenuItem8);
+
+        jMenuItem9.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_V, java.awt.event.InputEvent.CTRL_MASK));
+        jMenuItem9.setText("Paste");
+        jMenu2.add(jMenuItem9);
+
+        jMenuItem10.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_DELETE, 0));
+        jMenuItem10.setText("Delete");
+        jMenu2.add(jMenuItem10);
+        jMenu2.add(jSeparator4);
+
+        jMenuItem11.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_A, java.awt.event.InputEvent.CTRL_MASK));
+        jMenuItem11.setText("Select All");
+        jMenu2.add(jMenuItem11);
+
         jMenuBar1.add(jMenu2);
+
+        jMenu3.setText("Run");
+
+        jMenuItem12.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, java.awt.event.InputEvent.CTRL_MASK));
+        jMenuItem12.setText("Run File");
+        jMenu3.add(jMenuItem12);
+
+        jMenuItem13.setText("Remove Debug Code");
+        jMenu3.add(jMenuItem13);
+
+        jMenuBar1.add(jMenu3);
+
+        jMenu4.setText("Window");
+
+        jMenuItem14.setText("Console Window");
+        jMenu4.add(jMenuItem14);
+
+        jMenuItem15.setText("File Window");
+        jMenu4.add(jMenuItem15);
+
+        jMenuBar1.add(jMenu4);
+
+        jMenu5.setText("About");
+        jMenuBar1.add(jMenu5);
 
         setJMenuBar(jMenuBar1);
 
@@ -86,15 +196,21 @@ public class Editor extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE)
+            .addComponent(jSplitPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 958, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 279, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jSplitPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 456, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jMenuItem5ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -134,8 +250,40 @@ public class Editor extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
+    private javax.swing.JMenu jMenu3;
+    private javax.swing.JMenu jMenu4;
+    private javax.swing.JMenu jMenu5;
     private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuItem1;
+    private javax.swing.JMenuItem jMenuItem10;
+    private javax.swing.JMenuItem jMenuItem11;
+    private javax.swing.JMenuItem jMenuItem12;
+    private javax.swing.JMenuItem jMenuItem13;
+    private javax.swing.JMenuItem jMenuItem14;
+    private javax.swing.JMenuItem jMenuItem15;
+    private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JMenuItem jMenuItem3;
+    private javax.swing.JMenuItem jMenuItem4;
+    private javax.swing.JMenuItem jMenuItem5;
+    private javax.swing.JMenuItem jMenuItem6;
+    private javax.swing.JMenuItem jMenuItem7;
+    private javax.swing.JMenuItem jMenuItem8;
+    private javax.swing.JMenuItem jMenuItem9;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTextPane textPane;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JScrollPane jScrollPane4;
+    private javax.swing.JPopupMenu.Separator jSeparator1;
+    private javax.swing.JPopupMenu.Separator jSeparator2;
+    private javax.swing.JPopupMenu.Separator jSeparator3;
+    private javax.swing.JPopupMenu.Separator jSeparator4;
+    private javax.swing.JSplitPane jSplitPane1;
+    private javax.swing.JSplitPane jSplitPane2;
+    private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JTextArea jTextArea1;
+    private javax.swing.JTextPane jTextPane1;
+    private javax.swing.JTextPane jTextPane2;
+    private javax.swing.JTree jTree1;
+    private javax.swing.JMenuItem menuItemOpen;
     // End of variables declaration//GEN-END:variables
 }

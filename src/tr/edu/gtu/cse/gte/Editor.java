@@ -1,9 +1,12 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package tr.edu.gtu.cse.gte;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.StyledDocument;
 
 /**
  *
@@ -11,11 +14,43 @@ package tr.edu.gtu.cse.gte;
  */
 public class Editor extends javax.swing.JFrame {
 
+    final String KEYWORDS_FILE = "keywords";
+
+    private AbstractDocument doc;
+    private List<String> keywords;
+
     /**
      * Creates new form Editor
      */
     public Editor() {
         initComponents();
+        loadKeywords();
+        setDocumentFilter();
+    }
+
+    /**
+     * Loads C&C++ keywords from KEYWORDS_FILE.
+     */
+    private void loadKeywords() {
+        try {
+            keywords = Files.readAllLines(Paths.get(KEYWORDS_FILE),
+                    StandardCharsets.UTF_8);
+        } catch (IOException ignore) {}
+    }
+
+    /**
+     * Sets document filter to our special implementation GTEDocumentFilter.
+     */
+    private void setDocumentFilter() {
+        StyledDocument styledDoc = textPane.getStyledDocument();
+        if (styledDoc instanceof AbstractDocument) {
+            doc = (AbstractDocument)styledDoc;
+            doc.setDocumentFilter(new GTEDocumentFilter(keywords));
+        } else {
+            System.err.println("Text pane's document"
+                    + " isn't an AbstractDocument!");
+            System.exit(1);
+        }
     }
 
     /**
@@ -28,7 +63,7 @@ public class Editor extends javax.swing.JFrame {
     private void initComponents() {
 
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTextPane1 = new javax.swing.JTextPane();
+        textPane = new javax.swing.JTextPane();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenu2 = new javax.swing.JMenu();
@@ -37,7 +72,7 @@ public class Editor extends javax.swing.JFrame {
         setTitle("GTU Text Editor");
         setPreferredSize(new java.awt.Dimension(600, 400));
 
-        jScrollPane1.setViewportView(jTextPane1);
+        jScrollPane1.setViewportView(textPane);
 
         jMenu1.setText("File");
         jMenuBar1.add(jMenu1);
@@ -101,6 +136,6 @@ public class Editor extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTextPane jTextPane1;
+    private javax.swing.JTextPane textPane;
     // End of variables declaration//GEN-END:variables
 }

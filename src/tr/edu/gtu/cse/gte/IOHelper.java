@@ -81,22 +81,23 @@ public class IOHelper {
         }
         /*if file is selected , it is read contents of file.*/
         if (file != null) {      
-            try{
-                ArrayList<String> lines = new ArrayList<>();
-                BufferedReader reader = new BufferedReader(new FileReader(file));
-                while(true) {
-                    String line = reader.readLine();
-                    if (line != null){
-                        lines.add(line + "\n");
-                    }
-                    else break;
-                }
-                reader.close();
-                return lines;
-            }catch(IOException param){
-                param.printStackTrace();
-            }
+           
+            return read(file.getAbsolutePath());
         }
         return null;
+    }
+    public static ArrayList<String> read(String path) {
+        
+        try{
+            String line;
+            ArrayList<String> total_lines = new ArrayList<>();
+            BufferedReader reader = new BufferedReader(new FileReader(path));
+            while((line=reader.readLine())!=null)
+                total_lines.add(line + "\n");
+            return total_lines;
+        } catch(IOException param) {
+            param.printStackTrace();
+             return null;
+        }
     }
 }

@@ -243,7 +243,7 @@
 
                   <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
                   <SubComponents>
-                    <Component class="javax.swing.JTextPane" name="jTextPane1">
+                    <Component class="javax.swing.JTextPane" name="textPane">
                       <Properties>
                         <Property name="text" type="java.lang.String" value="burasi tab 1"/>
                       </Properties>

@@ -5,18 +5,58 @@
  */
 package tr.edu.gtu.cse.gte;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.StyledDocument;
+
 /**
  *
  * @author enes
  */
 public class Editor extends javax.swing.JFrame {
 
+    final String KEYWORDS_FILE = "keywords";
+
+    private AbstractDocument doc;
+    private List<String> keywords;
+
     /**
      * Creates new form Editor
      */
     public Editor() {
         initComponents();
+        loadKeywords();
+        setDocumentFilter();
     }
+
+    /**
+     * Loads C&C++ keywords from KEYWORDS_FILE.
+     */
+    private void loadKeywords() {
+        try {
+            keywords = Files.readAllLines(Paths.get(KEYWORDS_FILE),
+                    StandardCharsets.UTF_8);
+        } catch (IOException ignore) {}
+}
+
+    /**
+     * Sets document filter to our special implementation GTEDocumentFilter.
+     */
+    private void setDocumentFilter() {
+        StyledDocument styledDoc = textPane.getStyledDocument();
+        if (styledDoc instanceof AbstractDocument) {
+            doc = (AbstractDocument)styledDoc;
+            doc.setDocumentFilter(new GTEDocumentFilter(keywords));
+        } else {
+            System.err.println("Text pane's document"
+                    + " isn't an AbstractDocument!");
+            System.exit(1);
+        }
+}
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -31,7 +71,7 @@ public class Editor extends javax.swing.JFrame {
         jSplitPane1 = new javax.swing.JSplitPane();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTextPane1 = new javax.swing.JTextPane();
+        textPane = new javax.swing.JTextPane();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTextPane2 = new javax.swing.JTextPane();
         jScrollPane4 = new javax.swing.JScrollPane();
@@ -71,8 +111,8 @@ public class Editor extends javax.swing.JFrame {
 
         jSplitPane2.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
 
-        jTextPane1.setText("burasi tab 1");
-        jScrollPane1.setViewportView(jTextPane1);
+        textPane.setText("burasi tab 1");
+        jScrollPane1.setViewportView(textPane);
 
         jTabbedPane1.addTab("tab1", jScrollPane1);
 
@@ -281,9 +321,9 @@ public class Editor extends javax.swing.JFrame {
     private javax.swing.JSplitPane jSplitPane2;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTextArea jTextArea1;
-    private javax.swing.JTextPane jTextPane1;
     private javax.swing.JTextPane jTextPane2;
     private javax.swing.JTree jTree1;
     private javax.swing.JMenuItem menuItemOpen;
+    private javax.swing.JTextPane textPane;
     // End of variables declaration//GEN-END:variables
 }

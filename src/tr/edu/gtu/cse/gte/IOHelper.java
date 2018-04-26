@@ -86,6 +86,18 @@ public class IOHelper {
         }
         return null;
     }
+
+    public ArrayList<String> open(String filePath) {
+        file = new File(filePath);
+
+        /*if file is selected , it is read contents of file.*/
+        if (file != null) {
+
+            return read(file.getAbsolutePath());
+        }
+        return null;
+    }
+
     public static ArrayList<String> read(String path) {
 
         try{

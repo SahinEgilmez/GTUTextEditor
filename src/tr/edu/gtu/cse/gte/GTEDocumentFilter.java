@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.JTextPane;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
@@ -25,8 +26,12 @@ public class GTEDocumentFilter extends DocumentFilter {
     // language keywords for highlighting
     private final List<String> keywords;
 
-    public GTEDocumentFilter(List<String> keywords) {
+    // text pane that is filtered by this filter
+    private final JTextPane textPane;
+
+    public GTEDocumentFilter(List<String> keywords, JTextPane textPane) {
         this.keywords = keywords;
+        this.textPane = textPane;
 
         // create default attribute set for editor
         defaultAttributes = new SimpleAttributeSet();
@@ -277,33 +282,40 @@ public class GTEDocumentFilter extends DocumentFilter {
             AttributeSet attr) throws BadLocationException {
         string = refineText(fb, offset, string);
         super.insertString(fb, offset, string, attr);
+        int caretPos = textPane.getCaretPosition();
         resetStyles(fb);
         highlightFunctionNames(fb);
         highlightKeywords(fb);
         highlightComments(fb);
         highlightStrings(fb);
+        textPane.setCaretPosition(caretPos);
     }
 
     @Override
     public void replace(FilterBypass fb, int offset, int length, String text,
             AttributeSet attrs) throws BadLocationException {
+
         text = refineText(fb, offset, text);
         super.replace(fb, offset, length, text, attrs);
+        int caretPos = textPane.getCaretPosition();
         resetStyles(fb);
         highlightFunctionNames(fb);
         highlightKeywords(fb);
         highlightComments(fb);
         highlightStrings(fb);
+        textPane.setCaretPosition(caretPos);
     }
 
     @Override
     public void remove(FilterBypass fb, int offset, int length)
             throws BadLocationException {
         super.remove(fb, offset, length);
+        int caretPos = textPane.getCaretPosition();
         resetStyles(fb);
         highlightFunctionNames(fb);
         highlightKeywords(fb);
         highlightComments(fb);
         highlightStrings(fb);
+        textPane.setCaretPosition(caretPos);
     }
 }

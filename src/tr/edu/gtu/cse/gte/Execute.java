@@ -23,17 +23,14 @@ public class Execute {
     private static final String executionLogFile = "execution.log";
     public static boolean isFinish = false;
 
-    public static Process execute(String currentDir, JTextArea textArea, String... args) {
+    public static Process execute(String currentDir,
+            JTextArea textArea, String... args) {
 
         ProcessBuilder pb = new ProcessBuilder(args);
         pb.directory(new File(currentDir));
 
         pb.redirectOutput(new File(executionLogFile));
         pb.redirectError(new File(executionLogFile));
-
-        for (String a : args) {
-            System.out.println(a);
-        }
 
         Process process = null;
         try {
@@ -52,7 +49,7 @@ public class Execute {
                 while ((line = reader.readLine()) != null)
                     text.append(line + System.lineSeparator());
 
-                textArea.setText(text.toString());
+                textArea.append(text.toString());
                 fstream.close();
             } catch (Exception e) {
                 e.printStackTrace();

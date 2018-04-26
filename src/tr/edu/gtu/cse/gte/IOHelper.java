@@ -35,7 +35,7 @@ public class IOHelper {
                file = dialog.getSelectedFile();
             }
         }
-        
+
         if (file != null) {
             try{
                 FileWriter writer = new FileWriter(file, false);
@@ -48,16 +48,16 @@ public class IOHelper {
                 param.printStackTrace();
             }
         }
-        
+
     }
-    
+
     void saveAs(ArrayList<String> lines) {
 
         int result = dialog.showSaveDialog(parent);
         if (result ==  JFileChooser.APPROVE_OPTION ) {
            file = dialog.getSelectedFile();
         }
-        if (file != null) {      
+        if (file != null) {
             try{
                 FileWriter writer = new FileWriter(file, false);
                 for (String line : lines) {
@@ -70,7 +70,7 @@ public class IOHelper {
             }
         }
     }
-    
+
     public ArrayList<String> open() {
         /*show the user directory */
         int result = dialog.showOpenDialog(parent);
@@ -80,14 +80,14 @@ public class IOHelper {
             file = dialog.getSelectedFile();
         }
         /*if file is selected , it is read contents of file.*/
-        if (file != null) {      
-           
+        if (file != null) {
+
             return read(file.getAbsolutePath());
         }
         return null;
     }
     public static ArrayList<String> read(String path) {
-        
+
         try{
             String line;
             ArrayList<String> total_lines = new ArrayList<>();
@@ -99,5 +99,9 @@ public class IOHelper {
             param.printStackTrace();
              return null;
         }
+    }
+
+    public String getFileName() {
+        return file == null ? "new_file" : file.getName();
     }
 }

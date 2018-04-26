@@ -1,20 +1,28 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package tr.edu.gtu.cse.gte;
 
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTextPane;
+import javax.swing.ListModel;
+import javax.swing.event.ListDataListener;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.StyledDocument;
 
 /**
@@ -24,10 +32,12 @@ import javax.swing.text.StyledDocument;
 public class Editor extends javax.swing.JFrame {
 
     final String KEYWORDS_FILE = "keywords";
-    private String key;
-    private String value;
-    private AbstractDocument doc;
+    final String SNIPPETS_FILE = "snippets";
     private List<String> keywords;
+    private List<JTextPane> panes = new ArrayList<>();
+    private HashMap<String, String> snippets = new HashMap<>();
+    private List<IOHelper> iohelpers = new ArrayList<>();
+    private SuggestionManager sm = new SuggestionManager(new ArrayList<String>());
 
     /**
      * Creates new form Editor
@@ -35,7 +45,155 @@ public class Editor extends javax.swing.JFrame {
     public Editor() {
         initComponents();
         loadKeywords();
-        setDocumentFilter();
+        loadSnippets();
+        addANewTab();
+
+
+        //These actions come from the default editor kit.
+        //Get the ones we want and stick them in the menu.
+        menuItemEditCut.setAction(new DefaultEditorKit.CutAction());
+        menuItemEditCopy.setAction(new DefaultEditorKit.CopyAction());
+        menuItemEditPaste.setAction(new DefaultEditorKit.PasteAction());
+
+
+    }
+
+    /**
+     * Adds a new tab and selects the new created tab.
+     */
+    private void addANewTab() {
+        JTextPane tempPane = new JTextPane();
+        setDocumentFilter(tempPane);
+//
+//        JPanel panel = new JPanel( new BorderLayout() );
+//        panel.add(tempPane, BorderLayout.CENTER);
+//        TextLineNumber lineNumber = new TextLineNumber(tempPane, 3);
+//        panel.add(lineNumber, BorderLayout.EAST);
+//        JScrollPane scrollPane = new JScrollPane( panel );
+
+        tempPane.addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {}
+
+            @Override
+            public void keyPressed(KeyEvent e) {}
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                int activeTabIndex = tabbedPane.getSelectedIndex();
+                JTextPane activeTextPane = panes.get(activeTabIndex);
+
+                int caretPos = activeTextPane.getCaretPosition();
+                AbstractDocument doc =
+                        (AbstractDocument) activeTextPane.getDocument();
+
+                String text = null;
+                String fullText = null;
+
+                try {
+                    text = doc.getText(0, caretPos);
+                    fullText = doc.getText(0, doc.getLength());
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(Editor.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                // extract last line
+                int startOfLine = text.lastIndexOf("\n") + 1;
+                String lastLine = text.substring(startOfLine, caretPos);
+
+                if (lastLine.trim().length() > 1) {
+                    // create a regex pattern and matcher for current word
+                    String currentWordPattern = ".*\\b(\\w+)";
+
+                    Pattern pattern = Pattern.compile(currentWordPattern);
+                    Matcher matcher = pattern.matcher(lastLine);
+
+                    matcher.find();
+
+                    String currentWord = matcher.group(1);
+                    System.out.println(currentWord);
+
+                    String[] linesArray = fullText.split("\n");
+
+                    ArrayList<String> lines = new ArrayList<>();
+
+                    for (String line : linesArray) {
+                        lines.add(line);
+                    }
+
+                    System.out.println("cw: " + currentWord);
+                    System.out.println("cw: " + currentWord.length());
+                    System.out.println("start: " + matcher.start(1));
+                    System.out.println("len: " + currentWord.length());
+                    System.out.println("sel: " + suggestionList.getSelectedValue());
+
+                    sm.update(lines);
+
+                    ArrayList<String> suggestions = sm.search(currentWord);
+                    System.out.println(suggestions);
+
+                    suggestionList.setModel(new ListModel<String>() {
+                        @Override
+                        public int getSize() {
+                            return suggestions.size();
+                        }
+
+                        @Override
+                        public String getElementAt(int index) {
+                            return suggestions.get(index);
+                        }
+
+                        @Override
+                        public void addListDataListener(ListDataListener l) {
+                            System.out.println("add");
+                        }
+
+                        @Override
+                        public void removeListDataListener(ListDataListener l) {
+                            System.out.println("rem");
+                        }
+                    });
+
+                    suggestionList.addMouseListener(new MouseListener() {
+                        @Override
+                        public void mouseClicked(MouseEvent e) {
+                            try {
+                                System.out.println("start: " + matcher.start(1));
+                                System.out.println("len: " + currentWord.length());
+                                System.out.println("sel: " + suggestionList.getSelectedValue());
+
+                                doc.insertString(
+                                        caretPos - currentWord.length(),
+//                                        currentWord.length(),
+                                        suggestionList.getSelectedValue(),
+                                        null);
+                            } catch (BadLocationException ex) {
+                                ex.printStackTrace();
+                            }
+                        }
+
+                        @Override
+                        public void mousePressed(MouseEvent e) {}
+
+                        @Override
+                        public void mouseReleased(MouseEvent e) {}
+
+                        @Override
+                        public void mouseEntered(MouseEvent e) {}
+
+                        @Override
+                        public void mouseExited(MouseEvent e) {}
+                    });
+                }
+            }
+        });
+
+        panes.add(tempPane);
+        tabbedPane.addTab("new_file", new JScrollPane(tempPane));
+        tabbedPane.setSelectedIndex(tabbedPane.getTabCount()-1);
+
+        IOHelper tempHelper = new IOHelper(this);
+        iohelpers.add(tempHelper);
     }
 
     /**
@@ -51,17 +209,70 @@ public class Editor extends javax.swing.JFrame {
     /**
      * Sets document filter to our special implementation GTEDocumentFilter.
      */
-    private void setDocumentFilter() {
+    private void setDocumentFilter(JTextPane textPane) {
         StyledDocument styledDoc = textPane.getStyledDocument();
         if (styledDoc instanceof AbstractDocument) {
-            doc = (AbstractDocument)styledDoc;
+            AbstractDocument doc = (AbstractDocument)styledDoc;
             doc.setDocumentFilter(new GTEDocumentFilter(keywords));
         } else {
             System.err.println("Text pane's document"
                     + " isn't an AbstractDocument!");
             System.exit(1);
         }
-}
+    }
+
+    /**
+     * Loads snippets from SNIPPETS_FILE.
+     */
+    private void loadSnippets() {
+        try {
+            List<String> lines = Files.readAllLines(
+                    Paths.get(SNIPPETS_FILE), StandardCharsets.UTF_8);
+            for (String line : lines) {
+                String[] pair = line.split(":");
+                snippets.put(pair[0], pair[1].replace("\\n", "\n"));
+            }
+        } catch (IOException ignore) {}
+    }
+
+    /**
+     * Saves snippets to SNIPPETS_FILE.
+     */
+    private void saveSnippets() {
+        List<String> lines = new ArrayList<>();
+        for (String key : snippets.keySet()) {
+            String line = key + ":" + snippets.get(key).replace("\n", "\\n");
+            lines.add(line);
+        }
+        try {
+            Files.write(Paths.get(SNIPPETS_FILE), lines);
+        } catch (IOException ignore) {}
+    }
+
+    private ArrayList<String> extractLines() {
+        // get active tab index
+        int activeTabIndex = tabbedPane.getSelectedIndex();
+
+        ArrayList<String> lines = new ArrayList<>();
+
+        // get active tab and AbstractDocument
+        JTextPane activeTextPane = panes.get(activeTabIndex);
+        AbstractDocument doc = (AbstractDocument) activeTextPane.getDocument();
+        String text = null;
+        try {
+            text = doc.getText(0, doc.getLength());
+        } catch (BadLocationException ex) {
+            ex.printStackTrace();
+        }
+
+        String[] linesArray = text.split("\n");
+
+        for (String line : linesArray) {
+            lines.add(line);
+        }
+
+        return lines;
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -74,52 +285,43 @@ public class Editor extends javax.swing.JFrame {
 
         jSplitPane2 = new javax.swing.JSplitPane();
         jSplitPane1 = new javax.swing.JSplitPane();
-        jTabbedPane1 = new javax.swing.JTabbedPane();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        textPane = new javax.swing.JTextPane();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        jTextPane2 = new javax.swing.JTextPane();
+        tabbedPane = new javax.swing.JTabbedPane();
         jScrollPane4 = new javax.swing.JScrollPane();
-        jTree1 = new javax.swing.JTree();
+        fileStructure = new javax.swing.JTree();
+        jSplitPane3 = new javax.swing.JSplitPane();
         jScrollPane3 = new javax.swing.JScrollPane();
         jTextArea1 = new javax.swing.JTextArea();
-        jToolBar1 = new javax.swing.JToolBar();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        suggestionList = new javax.swing.JList<>();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
-        jMenuItem3 = new javax.swing.JMenuItem();
-        menuItemOpen = new javax.swing.JMenuItem();
+        menuItemFileNew = new javax.swing.JMenuItem();
+        menuItemFileOpen = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
-        jMenuItem1 = new javax.swing.JMenuItem();
-        jMenuItem2 = new javax.swing.JMenuItem();
+        menuItemFileSave = new javax.swing.JMenuItem();
+        menuItemFileSaveAs = new javax.swing.JMenuItem();
+        menuItemFileClose = new javax.swing.JMenuItem();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
-        jMenuItem5 = new javax.swing.JMenuItem();
+        menuItemFileExit = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
-        jMenuItem4 = new javax.swing.JMenuItem();
-        jMenuItem6 = new javax.swing.JMenuItem();
+        menuItemEditUndo = new javax.swing.JMenuItem();
+        menuItemEditRedo = new javax.swing.JMenuItem();
         jSeparator3 = new javax.swing.JPopupMenu.Separator();
-        jMenuItem7 = new javax.swing.JMenuItem();
-        jMenuItem8 = new javax.swing.JMenuItem();
-        jMenuItem9 = new javax.swing.JMenuItem();
-        jMenuItem10 = new javax.swing.JMenuItem();
+        menuItemEditCut = new javax.swing.JMenuItem();
+        menuItemEditCopy = new javax.swing.JMenuItem();
+        menuItemEditPaste = new javax.swing.JMenuItem();
+        menuItemEditDelete = new javax.swing.JMenuItem();
         jSeparator4 = new javax.swing.JPopupMenu.Separator();
-        jMenuItem11 = new javax.swing.JMenuItem();
+        menuItemEditSelectAll = new javax.swing.JMenuItem();
         jMenu3 = new javax.swing.JMenu();
-        jMenuItem12 = new javax.swing.JMenuItem();
-        jMenuItem13 = new javax.swing.JMenuItem();
+        menuItemRunRunFile = new javax.swing.JMenuItem();
         jMenu6 = new javax.swing.JMenu();
-        jMenuItem16 = new javax.swing.JMenuItem();
-        jMenuItem17 = new javax.swing.JMenuItem();
-        jMenu4 = new javax.swing.JMenu();
-        jMenuItem14 = new javax.swing.JMenuItem();
-        jMenuItem15 = new javax.swing.JMenuItem();
+        menuItemSnippetsSaveSnippet = new javax.swing.JMenuItem();
+        menuItemSnippetsLoadSnippet = new javax.swing.JMenuItem();
         jMenu5 = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("GTU Text Editor");
-        setPreferredSize(new java.awt.Dimension(600, 400));
 
         jSplitPane2.setDividerLocation(250);
         jSplitPane2.setDividerSize(3);
@@ -130,173 +332,170 @@ public class Editor extends javax.swing.JFrame {
         jSplitPane2.setOneTouchExpandable(true);
 
         jSplitPane1.setResizeWeight(0.1);
+        jSplitPane1.setRightComponent(tabbedPane);
 
-        textPane.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                jTextPane1FocusGained(evt);
-            }
-        });
-        jScrollPane1.setViewportView(textPane);
-
-        jTabbedPane1.addTab("tab1", jScrollPane1);
-
-        jTextPane2.setText("TAB 2 BURASI");
-        jScrollPane2.setViewportView(jTextPane2);
-
-        jTabbedPane1.addTab("tab2", jScrollPane2);
-
-        jSplitPane1.setRightComponent(jTabbedPane1);
-
-        jTree1.setAutoscrolls(true);
-        jTree1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
-        jTree1.setDebugGraphicsOptions(javax.swing.DebugGraphics.BUFFERED_OPTION);
-        jScrollPane4.setViewportView(jTree1);
+        fileStructure.setAutoscrolls(true);
+        fileStructure.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        fileStructure.setDebugGraphicsOptions(javax.swing.DebugGraphics.BUFFERED_OPTION);
+        jScrollPane4.setViewportView(fileStructure);
 
         jSplitPane1.setLeftComponent(jScrollPane4);
 
         jSplitPane2.setLeftComponent(jSplitPane1);
 
+        jSplitPane3.setResizeWeight(0.1);
+
         jTextArea1.setColumns(20);
         jTextArea1.setLineWrap(true);
         jTextArea1.setRows(5);
-        jTextArea1.setText("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc at pulvinar urna. Vestibulum sagittis venenatis fringilla. Pellentesque auctor erat et nisl iaculis, aliquam vestibulum est fermentum. Cras quis dictum mi. Fusce cursus tempor sapien, at eleifend quam bibendum vitae. Nulla facilisi. Praesent quis porttitor urna. Vestibulum iaculis laoreet tortor, ac pulvinar nisl porttitor nec. Suspendisse sed sapien sit amet magna viverra pretium ut a felis. Nulla at metus sed augue fringilla pretium. Nulla malesuada cursus eros at euismod. Morbi venenatis pharetra augue, at cursus nunc gravida eu. Sed consectetur felis eu ante bibendum dapibus. Sed non efficitur ex.  Fusce quis efficitur purus. Donec semper ante nec urna volutpat, ac varius nulla ultrices. Integer dapibus nulla in facilisis venenatis. Phasellus auctor condimentum viverra. Suspendisse nulla nulla, sagittis et aliquet eget, rhoncus nec ex. Etiam tempus, nibh ac faucibus ultricies, nisi turpis cursus urna, non suscipit nibh dui eu leo. Nulla nec massa neque. Fusce vitae tortor tortor. Sed condimentum massa et lobortis commodo. Mauris aliquam dui in justo pulvinar accumsan. Morbi blandit, mauris non sagittis sodales, felis nisi suscipit nisi, eget commodo diam nisl vel odio. Aliquam varius nisi sit amet purus pharetra, vel blandit nulla dignissim.  Morbi ultricies tempor odio vel convallis. Proin odio felis, eleifend id erat eu, egestas vestibulum velit. Fusce suscipit enim nec justo fringilla efficitur. Curabitur eget dolor in velit condimentum pretium. Sed finibus vehicula tortor, id consequat leo convallis a. Praesent at felis ornare, suscipit neque eget, sollicitudin magna. Suspendisse et faucibus turpis, id ultricies lorem. Mauris sollicitudin varius ipsum non eleifend. Nam erat urna, varius ac ultricies iaculis, hendrerit id massa. Fusce luctus nibh a congue feugiat. Nulla tincidunt risus non turpis vulputate vehicula.");
         jTextArea1.setDisabledTextColor(new java.awt.Color(0, 0, 0));
         jTextArea1.setEnabled(false);
         jTextArea1.setFocusable(false);
         jScrollPane3.setViewportView(jTextArea1);
 
-        jSplitPane2.setRightComponent(jScrollPane3);
+        jSplitPane3.setRightComponent(jScrollPane3);
 
-        jToolBar1.setRollover(true);
+        suggestionList.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                suggestionListMouseClicked(evt);
+            }
+        });
+        jScrollPane1.setViewportView(suggestionList);
 
-        jButton1.setText("jButton1");
-        jButton1.setFocusable(false);
-        jButton1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        jButton1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        jToolBar1.add(jButton1);
+        jSplitPane3.setLeftComponent(jScrollPane1);
 
-        jButton2.setText("jButton2");
-        jButton2.setFocusable(false);
-        jButton2.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        jButton2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        jToolBar1.add(jButton2);
-
-        jButton3.setText("jButton3");
-        jButton3.setFocusable(false);
-        jButton3.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        jButton3.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        jToolBar1.add(jButton3);
+        jSplitPane2.setBottomComponent(jSplitPane3);
 
         jMenu1.setText("File");
 
-        jMenuItem3.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_N, java.awt.event.InputEvent.CTRL_MASK));
-        jMenuItem3.setText("New");
-        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
+        menuItemFileNew.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_N, java.awt.event.InputEvent.CTRL_MASK));
+        menuItemFileNew.setText("New");
+        menuItemFileNew.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem3ActionPerformed(evt);
+                menuItemFileNewActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItem3);
+        jMenu1.add(menuItemFileNew);
 
-        menuItemOpen.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
-        menuItemOpen.setText("Open");
-        jMenu1.add(menuItemOpen);
+        menuItemFileOpen.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
+        menuItemFileOpen.setText("Open");
+        menuItemFileOpen.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemFileOpenActionPerformed(evt);
+            }
+        });
+        jMenu1.add(menuItemFileOpen);
         jMenu1.add(jSeparator1);
 
-        jMenuItem1.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_MASK));
-        jMenuItem1.setText("Save");
-        jMenu1.add(jMenuItem1);
-
-        jMenuItem2.setText("Save As");
-        jMenu1.add(jMenuItem2);
-        jMenu1.add(jSeparator2);
-
-        jMenuItem5.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F4, java.awt.event.InputEvent.ALT_MASK));
-        jMenuItem5.setText("Exit");
-        jMenuItem5.addActionListener(new java.awt.event.ActionListener() {
+        menuItemFileSave.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_MASK));
+        menuItemFileSave.setText("Save");
+        menuItemFileSave.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem5ActionPerformed(evt);
+                menuItemFileSaveActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItem5);
+        jMenu1.add(menuItemFileSave);
+
+        menuItemFileSaveAs.setText("Save As");
+        menuItemFileSaveAs.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemFileSaveAsActionPerformed(evt);
+            }
+        });
+        jMenu1.add(menuItemFileSaveAs);
+
+        menuItemFileClose.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, java.awt.event.InputEvent.CTRL_MASK));
+        menuItemFileClose.setText("Close");
+        menuItemFileClose.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemFileCloseActionPerformed(evt);
+            }
+        });
+        jMenu1.add(menuItemFileClose);
+        jMenu1.add(jSeparator2);
+
+        menuItemFileExit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F4, java.awt.event.InputEvent.ALT_MASK));
+        menuItemFileExit.setText("Exit");
+        menuItemFileExit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemFileExitActionPerformed(evt);
+            }
+        });
+        jMenu1.add(menuItemFileExit);
 
         jMenuBar1.add(jMenu1);
 
         jMenu2.setText("Edit");
 
-        jMenuItem4.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Z, java.awt.event.InputEvent.CTRL_MASK));
-        jMenuItem4.setText("Undo");
-        jMenu2.add(jMenuItem4);
+        menuItemEditUndo.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Z, java.awt.event.InputEvent.CTRL_MASK));
+        menuItemEditUndo.setText("Undo");
+        menuItemEditUndo.setEnabled(false);
+        jMenu2.add(menuItemEditUndo);
 
-        jMenuItem6.setText("Redo");
-        jMenu2.add(jMenuItem6);
+        menuItemEditRedo.setText("Redo");
+        menuItemEditRedo.setEnabled(false);
+        jMenu2.add(menuItemEditRedo);
         jMenu2.add(jSeparator3);
 
-        jMenuItem7.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.event.InputEvent.CTRL_MASK));
-        jMenuItem7.setText("Cut");
-        jMenu2.add(jMenuItem7);
+        menuItemEditCut.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.event.InputEvent.CTRL_MASK));
+        menuItemEditCut.setText("Cut");
+        jMenu2.add(menuItemEditCut);
 
-        jMenuItem8.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.event.InputEvent.CTRL_MASK));
-        jMenuItem8.setText("Copy");
-        jMenu2.add(jMenuItem8);
+        menuItemEditCopy.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.event.InputEvent.CTRL_MASK));
+        menuItemEditCopy.setText("Copy");
+        jMenu2.add(menuItemEditCopy);
 
-        jMenuItem9.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_V, java.awt.event.InputEvent.CTRL_MASK));
-        jMenuItem9.setText("Paste");
-        jMenu2.add(jMenuItem9);
+        menuItemEditPaste.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_V, java.awt.event.InputEvent.CTRL_MASK));
+        menuItemEditPaste.setText("Paste");
+        jMenu2.add(menuItemEditPaste);
 
-        jMenuItem10.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_DELETE, 0));
-        jMenuItem10.setText("Delete");
-        jMenu2.add(jMenuItem10);
+        menuItemEditDelete.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_DELETE, 0));
+        menuItemEditDelete.setText("Delete");
+        menuItemEditDelete.setEnabled(false);
+        jMenu2.add(menuItemEditDelete);
         jMenu2.add(jSeparator4);
 
-        jMenuItem11.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_A, java.awt.event.InputEvent.CTRL_MASK));
-        jMenuItem11.setText("Select All");
-        jMenu2.add(jMenuItem11);
+        menuItemEditSelectAll.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_A, java.awt.event.InputEvent.CTRL_MASK));
+        menuItemEditSelectAll.setText("Select All");
+        menuItemEditSelectAll.setEnabled(false);
+        jMenu2.add(menuItemEditSelectAll);
 
         jMenuBar1.add(jMenu2);
 
         jMenu3.setText("Run");
 
-        jMenuItem12.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, java.awt.event.InputEvent.CTRL_MASK));
-        jMenuItem12.setText("Run File");
-        jMenu3.add(jMenuItem12);
-
-        jMenuItem13.setText("Remove Debug Code");
-        jMenu3.add(jMenuItem13);
+        menuItemRunRunFile.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, java.awt.event.InputEvent.CTRL_MASK));
+        menuItemRunRunFile.setText("Run File");
+        menuItemRunRunFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemRunRunFileActionPerformed(evt);
+            }
+        });
+        jMenu3.add(menuItemRunRunFile);
 
         jMenuBar1.add(jMenu3);
 
         jMenu6.setText("Snippets");
 
-        jMenuItem16.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
-        jMenuItem16.setText("Save Snippet");
-        jMenuItem16.addActionListener(new java.awt.event.ActionListener() {
+        menuItemSnippetsSaveSnippet.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
+        menuItemSnippetsSaveSnippet.setText("Save Snippet");
+        menuItemSnippetsSaveSnippet.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem16ActionPerformed(evt);
+                menuItemSnippetsSaveSnippetActionPerformed(evt);
             }
         });
-        jMenu6.add(jMenuItem16);
+        jMenu6.add(menuItemSnippetsSaveSnippet);
 
-        jMenuItem17.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, java.awt.event.InputEvent.CTRL_MASK));
-        jMenuItem17.setText("Load Snippet");
-        jMenuItem17.addActionListener(new java.awt.event.ActionListener() {
+        menuItemSnippetsLoadSnippet.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, java.awt.event.InputEvent.CTRL_MASK));
+        menuItemSnippetsLoadSnippet.setText("Load Snippet");
+        menuItemSnippetsLoadSnippet.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem17ActionPerformed(evt);
+                menuItemSnippetsLoadSnippetActionPerformed(evt);
             }
         });
-        jMenu6.add(jMenuItem17);
+        jMenu6.add(menuItemSnippetsLoadSnippet);
 
         jMenuBar1.add(jMenu6);
-
-        jMenu4.setText("Window");
-
-        jMenuItem14.setText("Console Window");
-        jMenu4.add(jMenuItem14);
-
-        jMenuItem15.setText("File Window");
-        jMenu4.add(jMenuItem15);
-
-        jMenuBar1.add(jMenu4);
 
         jMenu5.setText("About");
         jMenuBar1.add(jMenu5);
@@ -307,52 +506,130 @@ public class Editor extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jToolBar1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(jSplitPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 600, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(jToolBar1, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(0, 0, 0)
                 .addComponent(jSplitPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 348, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jMenuItem5ActionPerformed
+    private void menuItemFileExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemFileExitActionPerformed
+        System.exit(0);
+    }//GEN-LAST:event_menuItemFileExitActionPerformed
 
-    private void jTextPane1FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTextPane1FocusGained
-        // TODO add your handling code here:
-     
-    }//GEN-LAST:event_jTextPane1FocusGained
+    private void menuItemSnippetsSaveSnippetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemSnippetsSaveSnippetActionPerformed
+        int activeTabIndex = tabbedPane.getSelectedIndex();
+        JTextPane activeTextPane = panes.get(activeTabIndex);
 
-    private void jMenuItem16ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem16ActionPerformed
-    int i = jTabbedPane1.getSelectedIndex();
-    
-     value = textPane.getSelectedText();
-    key =  JOptionPane.showInputDialog("Enter key for this snippet");
-    System.out.println(key);
-    System.out.println(value);
-    }//GEN-LAST:event_jMenuItem16ActionPerformed
+        String value = activeTextPane.getSelectedText();
+        String key =  JOptionPane.showInputDialog("Enter key for this snippet");
 
-    private void jMenuItem17ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem17ActionPerformed
-        int i = textPane.getCaretPosition();
-        StyledDocument doc = textPane.getStyledDocument();
-        try {
-            doc.insertString(i,value,null);
-        } catch (BadLocationException ex) {
-            Logger.getLogger(Editor.class.getName()).log(Level.SEVERE, null, ex);
+        if (key != null) {
+            snippets.put(key, value);
+            saveSnippets();
         }
-    }//GEN-LAST:event_jMenuItem17ActionPerformed
+    }//GEN-LAST:event_menuItemSnippetsSaveSnippetActionPerformed
 
-    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
-        
-        jTabbedPane1.addTab("tab3",new javax.swing.JTextPane());        // TODO add your handling code here:
-    }//GEN-LAST:event_jMenuItem3ActionPerformed
+    private void menuItemSnippetsLoadSnippetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemSnippetsLoadSnippetActionPerformed
+        int activeTabIndex = tabbedPane.getSelectedIndex();
+        JTextPane activeTextPane = panes.get(activeTabIndex);
+
+        int caretPos = activeTextPane.getCaretPosition();
+        StyledDocument doc = activeTextPane.getStyledDocument();
+
+        String key = JOptionPane.showInputDialog("Enter key for this snippet");
+
+        try {
+            doc.insertString(caretPos, snippets.getOrDefault(key, ""), null);
+        } catch (BadLocationException ex) {
+            ex.printStackTrace();
+        }
+    }//GEN-LAST:event_menuItemSnippetsLoadSnippetActionPerformed
+
+    private void menuItemFileNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemFileNewActionPerformed
+        addANewTab();
+    }//GEN-LAST:event_menuItemFileNewActionPerformed
+
+    private void menuItemFileCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemFileCloseActionPerformed
+        int activeTabIndex = tabbedPane.getSelectedIndex();
+
+        if (activeTabIndex != -1) {
+            tabbedPane.remove(activeTabIndex);
+            panes.remove(activeTabIndex);
+            iohelpers.remove(activeTabIndex);
+        }
+    }//GEN-LAST:event_menuItemFileCloseActionPerformed
+
+    private void menuItemFileOpenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemFileOpenActionPerformed
+        addANewTab();
+
+        // open a file and read its contents
+        int activeTabIndex = tabbedPane.getSelectedIndex();
+        IOHelper helper = iohelpers.get(activeTabIndex);
+        ArrayList<String> lines = helper.open();
+
+        if (lines != null) {
+            try {
+                String text = "";
+                // build text
+                for (String line : lines) {
+                    text += line;
+                }
+
+                JTextPane activeTextPane = panes.get(activeTabIndex);
+                tabbedPane.setTitleAt(activeTabIndex, helper.getFileName());
+
+                // insert text
+                AbstractDocument doc =
+                        (AbstractDocument) activeTextPane.getDocument();
+                doc.insertString(0, text, null);
+            } catch (BadLocationException ex) {
+                ex.printStackTrace();
+            }
+        }
+        else {
+            panes.remove(activeTabIndex);
+            iohelpers.remove(activeTabIndex);
+            tabbedPane.remove(activeTabIndex);
+        }
+    }//GEN-LAST:event_menuItemFileOpenActionPerformed
+
+    private void menuItemFileSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemFileSaveActionPerformed
+        int activeTabIndex = tabbedPane.getSelectedIndex();
+        IOHelper helper = iohelpers.get(activeTabIndex);
+        ArrayList<String> lines = extractLines();
+
+        helper.save(lines);
+
+        tabbedPane.setTitleAt(activeTabIndex, helper.getFileName());
+    }//GEN-LAST:event_menuItemFileSaveActionPerformed
+
+    private void menuItemFileSaveAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemFileSaveAsActionPerformed
+        int activeTabIndex = tabbedPane.getSelectedIndex();
+        IOHelper helper = iohelpers.get(activeTabIndex);
+        ArrayList<String> lines = extractLines();
+
+        helper.saveAs(lines);
+
+        tabbedPane.setTitleAt(activeTabIndex, helper.getFileName());
+    }//GEN-LAST:event_menuItemFileSaveAsActionPerformed
+
+    private void menuItemRunRunFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemRunRunFileActionPerformed
+        int activeTabIndex = tabbedPane.getSelectedIndex();
+        IOHelper helper = iohelpers.get(activeTabIndex);
+        Execute.execute(".", jTextArea1, "gcc", helper.getPath());
+        Process p = Execute.execute(".", jTextArea1, "./a.out");
+        jTextArea1.append("\nProcess exit value: " + p.exitValue());
+    }//GEN-LAST:event_menuItemRunRunFileActionPerformed
+
+    private void suggestionListMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_suggestionListMouseClicked
+        System.out.println(suggestionList.getSelectedValue());
+    }//GEN-LAST:event_suggestionListMouseClicked
 
     /**
      * @param args the command line arguments
@@ -390,35 +667,14 @@ public class Editor extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
+    private javax.swing.JTree fileStructure;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu3;
-    private javax.swing.JMenu jMenu4;
     private javax.swing.JMenu jMenu5;
     private javax.swing.JMenu jMenu6;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JMenuItem jMenuItem1;
-    private javax.swing.JMenuItem jMenuItem10;
-    private javax.swing.JMenuItem jMenuItem11;
-    private javax.swing.JMenuItem jMenuItem12;
-    private javax.swing.JMenuItem jMenuItem13;
-    private javax.swing.JMenuItem jMenuItem14;
-    private javax.swing.JMenuItem jMenuItem15;
-    private javax.swing.JMenuItem jMenuItem16;
-    private javax.swing.JMenuItem jMenuItem17;
-    private javax.swing.JMenuItem jMenuItem2;
-    private javax.swing.JMenuItem jMenuItem3;
-    private javax.swing.JMenuItem jMenuItem4;
-    private javax.swing.JMenuItem jMenuItem5;
-    private javax.swing.JMenuItem jMenuItem6;
-    private javax.swing.JMenuItem jMenuItem7;
-    private javax.swing.JMenuItem jMenuItem8;
-    private javax.swing.JMenuItem jMenuItem9;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JPopupMenu.Separator jSeparator1;
@@ -427,12 +683,25 @@ public class Editor extends javax.swing.JFrame {
     private javax.swing.JPopupMenu.Separator jSeparator4;
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JSplitPane jSplitPane2;
-    private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JSplitPane jSplitPane3;
     private javax.swing.JTextArea jTextArea1;
-    private javax.swing.JTextPane jTextPane2;
-    private javax.swing.JToolBar jToolBar1;
-    private javax.swing.JTree jTree1;
-    private javax.swing.JMenuItem menuItemOpen;
-    private javax.swing.JTextPane textPane;
+    private javax.swing.JMenuItem menuItemEditCopy;
+    private javax.swing.JMenuItem menuItemEditCut;
+    private javax.swing.JMenuItem menuItemEditDelete;
+    private javax.swing.JMenuItem menuItemEditPaste;
+    private javax.swing.JMenuItem menuItemEditRedo;
+    private javax.swing.JMenuItem menuItemEditSelectAll;
+    private javax.swing.JMenuItem menuItemEditUndo;
+    private javax.swing.JMenuItem menuItemFileClose;
+    private javax.swing.JMenuItem menuItemFileExit;
+    private javax.swing.JMenuItem menuItemFileNew;
+    private javax.swing.JMenuItem menuItemFileOpen;
+    private javax.swing.JMenuItem menuItemFileSave;
+    private javax.swing.JMenuItem menuItemFileSaveAs;
+    private javax.swing.JMenuItem menuItemRunRunFile;
+    private javax.swing.JMenuItem menuItemSnippetsLoadSnippet;
+    private javax.swing.JMenuItem menuItemSnippetsSaveSnippet;
+    private javax.swing.JList<String> suggestionList;
+    private javax.swing.JTabbedPane tabbedPane;
     // End of variables declaration//GEN-END:variables
 }

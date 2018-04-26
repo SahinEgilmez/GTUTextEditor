@@ -31,7 +31,7 @@ public class GTEDocumentFilter extends DocumentFilter {
         // create default attribute set for editor
         defaultAttributes = new SimpleAttributeSet();
         StyleConstants.setFontFamily(defaultAttributes, "Monospaced");
-        StyleConstants.setFontSize(defaultAttributes, 16);
+        StyleConstants.setFontSize(defaultAttributes, 12);
     }
 
     /**
@@ -123,13 +123,13 @@ public class GTEDocumentFilter extends DocumentFilter {
         // create an attribute set for keywords
         SimpleAttributeSet keywordAttrs =
                 new SimpleAttributeSet(defaultAttributes);
-        StyleConstants.setForeground(keywordAttrs, Color.GREEN);
+        StyleConstants.setForeground(keywordAttrs, new Color(151, 51, 151));
 
         // get the text in the document
         String text = doc.getText(0, doc.getLength());
 
         // create a regex pattern and matcher for function names
-        String functionNamePattern = "\\b(\\w*)\\(.*?\\)";
+        String functionNamePattern = "\\b([\\w\\.::]*)\\(.*?\\)";
 
         Pattern pattern = Pattern.compile(functionNamePattern);
         Matcher matcher = pattern.matcher(text);
@@ -174,8 +174,6 @@ public class GTEDocumentFilter extends DocumentFilter {
         }
         keywordsPattern += ")\\b";
 
-        System.out.println(keywordsPattern);
-
         Pattern pattern = Pattern.compile(keywordsPattern);
         Matcher matcher = pattern.matcher(text);
 
@@ -193,6 +191,87 @@ public class GTEDocumentFilter extends DocumentFilter {
         }
     }
 
+    /**
+     * Highlights comments in the text. Gets the text in the document then
+     * searches for comments. Highlights comments by changing the attribute
+     * sets of the matches.
+     *
+     * @param fb filter bypass for getting document
+     * @throws BadLocationException
+     */
+    private void highlightComments(FilterBypass fb)
+            throws BadLocationException {
+        AbstractDocument doc = (AbstractDocument) fb.getDocument();
+
+        // create an attribute set for comments
+        SimpleAttributeSet keywordAttrs =
+                new SimpleAttributeSet(defaultAttributes);
+        StyleConstants.setForeground(keywordAttrs, Color.GRAY);
+
+        // get the text in the document
+        String text = doc.getText(0, doc.getLength());
+
+        // create a regex pattern and matcher
+        String commentsPattern = "//.*?\n|/\\*.*?\\*/";
+
+        Pattern pattern = Pattern.compile(commentsPattern, Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(text);
+
+        // find all comments and change their attributes
+        int start, end, len;
+        String match;
+
+        while (matcher.find()) {
+            start = matcher.start();
+            end   = matcher.end();
+            len   = end - start;
+            match = matcher.group();
+
+            super.replace(fb, start, len, match, keywordAttrs);
+        }
+    }
+
+    /**
+     * Highlights strings in the text. Gets the text in the document then
+     * searches for strings (namely text between single quotes and double
+     * quotes). Highlights comments by changing the attribute sets of the
+     * matches.
+     *
+     * @param fb filter bypass for getting document
+     * @throws BadLocationException
+     */
+    private void highlightStrings(FilterBypass fb)
+            throws BadLocationException {
+        AbstractDocument doc = (AbstractDocument) fb.getDocument();
+
+        // create an attribute set for strings
+        SimpleAttributeSet keywordAttrs =
+                new SimpleAttributeSet(defaultAttributes);
+        StyleConstants.setForeground(keywordAttrs, new Color(151, 151, 51));
+
+        // get the text in the document
+        String text = doc.getText(0, doc.getLength());
+
+        // create a regex pattern and matcher
+        String commentsPattern = "'*?'|\".*?\"";
+
+        Pattern pattern = Pattern.compile(commentsPattern, Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(text);
+
+        // find all strings and change their attributes
+        int start, end, len;
+        String match;
+
+        while (matcher.find()) {
+            start = matcher.start();
+            end   = matcher.end();
+            len   = end - start;
+            match = matcher.group();
+
+            super.replace(fb, start, len, match, keywordAttrs);
+        }
+    }
+
     @Override
     public void insertString(FilterBypass fb, int offset, String string,
             AttributeSet attr) throws BadLocationException {
@@ -201,6 +280,8 @@ public class GTEDocumentFilter extends DocumentFilter {
         resetStyles(fb);
         highlightFunctionNames(fb);
         highlightKeywords(fb);
+        highlightComments(fb);
+        highlightStrings(fb);
     }
 
     @Override
@@ -211,6 +292,8 @@ public class GTEDocumentFilter extends DocumentFilter {
         resetStyles(fb);
         highlightFunctionNames(fb);
         highlightKeywords(fb);
+        highlightComments(fb);
+        highlightStrings(fb);
     }
 
     @Override
@@ -220,5 +303,7 @@ public class GTEDocumentFilter extends DocumentFilter {
         resetStyles(fb);
         highlightFunctionNames(fb);
         highlightKeywords(fb);
+        highlightComments(fb);
+        highlightStrings(fb);
     }
 }

@@ -599,13 +599,19 @@ public class Editor extends javax.swing.JFrame {
             iohelpers.remove(activeTabIndex);
             activeTabIndex = tabbedPane.getSelectedIndex();
             if (activeTabIndex != -1) {
-                IOHelper helper = iohelpers.get(activeTabIndex-1);
+                IOHelper helper = iohelpers.get(activeTabIndex);
                 String path=helper.getPath();
                 if (path != null) {
                     FileStructure fileStructures= new FileStructure();
                     FileTreeModel model=fileStructures.getModel(path);
                     fileStructure.setModel(model);
                 }
+                else {
+                    fileStructure.setModel(new FileTreeModel(null));
+                }
+            }
+            else {
+                fileStructure.setModel(new FileTreeModel(null));
             }
         }
     }//GEN-LAST:event_menuItemFileCloseActionPerformed

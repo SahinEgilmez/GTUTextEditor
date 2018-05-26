@@ -34,6 +34,7 @@ public class Editor extends javax.swing.JFrame {
 
     final String KEYWORDS_FILE = "keywords";
     final String SNIPPETS_FILE = "snippets";
+    final String SNIPPET_SEP = "'0?-18\"|\\@5~9|,@*^7=";
     private List<String> keywords;
     private List<JTextPane> panes = new ArrayList<>();
     private HashMap<String, String> snippets = new HashMap<>();
@@ -236,7 +237,7 @@ public class Editor extends javax.swing.JFrame {
                     Paths.get(SNIPPETS_FILE), StandardCharsets.UTF_8);
             for (String line : lines) {
                 String[] pair = line.split(":");
-                snippets.put(pair[0], pair[1].replace("\\n", "\n"));
+                snippets.put(pair[0], pair[1].replace(SNIPPET_SEP, "\n"));
             }
         } catch (IOException ignore) {}
     }
@@ -247,7 +248,7 @@ public class Editor extends javax.swing.JFrame {
     private void saveSnippets() {
         List<String> lines = new ArrayList<>();
         for (String key : snippets.keySet()) {
-            String line = key + ":" + snippets.get(key).replace("\n", "\\n");
+            String line = key + ":" + snippets.get(key).replace("\n", SNIPPET_SEP);
             lines.add(line);
         }
         try {
@@ -377,11 +378,6 @@ public class Editor extends javax.swing.JFrame {
 
         jSplitPane3.setRightComponent(jScrollPane3);
 
-        suggestionList.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                suggestionListMouseClicked(evt);
-            }
-        });
         jScrollPane1.setViewportView(suggestionList);
 
         jSplitPane3.setLeftComponent(jScrollPane1);
@@ -655,8 +651,6 @@ public class Editor extends javax.swing.JFrame {
         IOHelper helper = iohelpers.get(activeTabIndex);
         ArrayList<String> lines = extractLines();
 
-
-        System.out.println("save");
         helper.save(lines);
 
         tabbedPane.setTitleAt(activeTabIndex, helper.getFileName());
@@ -724,10 +718,6 @@ public class Editor extends javax.swing.JFrame {
             jTextArea1.setText("Error: please save the file first");
         }
     }//GEN-LAST:event_menuItemRunRunFileActionPerformed
-
-    private void suggestionListMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_suggestionListMouseClicked
-        System.out.println(suggestionList.getSelectedValue());
-    }//GEN-LAST:event_suggestionListMouseClicked
 
     private void tabbedPaneMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabbedPaneMouseClicked
         int activeTabIndex = tabbedPane.getSelectedIndex();

@@ -11,6 +11,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -40,6 +41,11 @@ public class Editor extends javax.swing.JFrame {
     private List<IOHelper> iohelpers = new ArrayList<>();
     private SuggestionManager sm = new SuggestionManager(new ArrayList<String>());
 
+    private ArrayList<Stack<String>> histories = new ArrayList<>();
+    
+    private String lastText = "";
+    
+
     /**
      * Creates new form Editor
      */
@@ -48,7 +54,7 @@ public class Editor extends javax.swing.JFrame {
         loadKeywords();
         loadSnippets();
         addANewTab();
-
+        takeBackUp();
 
         //These actions come from the default editor kit.
         //Get the ones we want and stick them in the menu.
@@ -69,7 +75,10 @@ public class Editor extends javax.swing.JFrame {
     private void addANewTab() {
         JTextPane tempPane = new JTextPane();
         setDocumentFilter(tempPane);
-
+        histories.add(new Stack<String>());
+        
+        //System.out.println("size of history stack list : " + histories.size());
+        
         tempPane.addKeyListener(new KeyListener() {
             @Override
             public void keyTyped(KeyEvent e) {
@@ -284,6 +293,44 @@ public class Editor extends javax.swing.JFrame {
 
         return lines;
     }
+       
+    void takeBackUp() {
+        
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+  
+                for ( ; ; ) {
+                    
+                    int activeTabIndex = tabbedPane.getSelectedIndex();
+                   
+                    if (activeTabIndex != -1 ) {
+                    
+                        JTextPane activeTextPane = panes.get(activeTabIndex); 
+                        
+                       if ((histories.get(activeTabIndex).isEmpty() || 
+                            !histories.get(activeTabIndex).peek().equals(activeTextPane.getText()))
+                              &&  !activeTextPane.getText().equals("")) {
+                           
+                            histories.get(activeTabIndex).push(activeTextPane.getText());
+                            
+                            System.out.println("Pushed text : " + activeTextPane.getText());
+                        }
+                        
+                        
+                    }
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(Editor.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                
+                }
+                
+            }
+        }).start();
+        
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -456,7 +503,11 @@ public class Editor extends javax.swing.JFrame {
 
         menuItemEditUndo.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Z, java.awt.event.InputEvent.CTRL_MASK));
         menuItemEditUndo.setText("Undo");
-        menuItemEditUndo.setEnabled(false);
+        menuItemEditUndo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemEditUndoActionPerformed(evt);
+            }
+        });
         jMenu2.add(menuItemEditUndo);
 
         menuItemEditRedo.setText("Redo");
@@ -592,12 +643,17 @@ public class Editor extends javax.swing.JFrame {
 
     private void menuItemFileCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemFileCloseActionPerformed
         int activeTabIndex = tabbedPane.getSelectedIndex();
-
+        System.out.println(activeTabIndex);
         if (activeTabIndex != -1) {
             tabbedPane.remove(activeTabIndex);
             panes.remove(activeTabIndex);
+            histories.remove(activeTabIndex);
             iohelpers.remove(activeTabIndex);
             activeTabIndex = tabbedPane.getSelectedIndex();
+            
+            // there are multiple tab, when first tab is closed
+            // acitveTabIndex set to 0
+            // so ArrayIndexOfBoundException occur
             if (activeTabIndex != -1) {
                 IOHelper helper = iohelpers.get(activeTabIndex-1);
                 String path=helper.getPath();
@@ -633,6 +689,8 @@ public class Editor extends javax.swing.JFrame {
                 AbstractDocument doc =
                         (AbstractDocument) activeTextPane.getDocument();
                 doc.insertString(0, text, null);
+                lastText = activeTextPane.getText();
+                //System.out.println(lastText);
             } catch (BadLocationException ex) {
                 ex.printStackTrace();
             }
@@ -720,20 +778,6 @@ public class Editor extends javax.swing.JFrame {
         System.out.println(suggestionList.getSelectedValue());
     }//GEN-LAST:event_suggestionListMouseClicked
 
-    private void tabbedPaneMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabbedPaneMouseClicked
-        int activeTabIndex = tabbedPane.getSelectedIndex();
-        IOHelper helper = iohelpers.get(activeTabIndex);
-        String path=helper.getPath();
-        if (path != null) {
-            FileStructure fileStructures= new FileStructure();
-            FileTreeModel model=fileStructures.getModel(path);
-            fileStructure.setModel(model);
-        }
-        else {
-            fileStructure.setModel(null);
-        }
-    }//GEN-LAST:event_tabbedPaneMouseClicked
-
     private void fileStructureValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_fileStructureValueChanged
         String path =
                 fileStructure.getSelectionPath().getPathComponent(1).toString();
@@ -777,8 +821,41 @@ public class Editor extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_fileStructureValueChanged
 
+    private void tabbedPaneMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabbedPaneMouseClicked
+        int activeTabIndex = tabbedPane.getSelectedIndex();
+        IOHelper helper = iohelpers.get(activeTabIndex);
+        String path=helper.getPath();
+        if (path != null) {
+            FileStructure fileStructures= new FileStructure();
+            FileTreeModel model=fileStructures.getModel(path);
+            fileStructure.setModel(model);
+        }
+        else {
+            fileStructure.setModel(null);
+        }
+    }//GEN-LAST:event_tabbedPaneMouseClicked
+
+    private void menuItemEditUndoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemEditUndoActionPerformed
+        // TODO add your handling code here:
+        int activeTabIndex = tabbedPane.getSelectedIndex();
+
+        JTextPane activeTextPane = panes.get(activeTabIndex);
+        
+        
+        
+        
+        if (!histories.get(activeTabIndex).isEmpty())
+            /*tempStr = */histories.get(activeTabIndex).pop();
+        if (!histories.get(activeTabIndex).isEmpty())
+            activeTextPane.setText(histories.get(activeTabIndex).pop());
+        else 
+            activeTextPane.setText(lastText);
+        
+        //activeTextPane.setText(history.pop());
+    }//GEN-LAST:event_menuItemEditUndoActionPerformed
+
     /**
-     * @param args the command line arguments
+     * @param args the command line argumentste
      */
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */

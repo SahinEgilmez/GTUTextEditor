@@ -322,6 +322,8 @@ public class Editor extends javax.swing.JFrame {
         menuItemEditSelectAll = new javax.swing.JMenuItem();
         jMenu3 = new javax.swing.JMenu();
         menuItemRunRunFile = new javax.swing.JMenuItem();
+        menuItemRunGenCode = new javax.swing.JMenuItem();
+        menuItemRunRemCode = new javax.swing.JMenuItem();
         jMenu6 = new javax.swing.JMenu();
         menuItemSnippetsSaveSnippet = new javax.swing.JMenuItem();
         menuItemSnippetsLoadSnippet = new javax.swing.JMenuItem();
@@ -489,6 +491,22 @@ public class Editor extends javax.swing.JFrame {
             }
         });
         jMenu3.add(menuItemRunRunFile);
+
+        menuItemRunGenCode.setText("Generate Debug Code");
+        menuItemRunGenCode.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemRunGenCodeActionPerformed(evt);
+            }
+        });
+        jMenu3.add(menuItemRunGenCode);
+
+        menuItemRunRemCode.setText("Remove All Debug Codes");
+        menuItemRunRemCode.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemRunRemCodeActionPerformed(evt);
+            }
+        });
+        jMenu3.add(menuItemRunRemCode);
 
         jMenuBar1.add(jMenu3);
 
@@ -777,6 +795,108 @@ public class Editor extends javax.swing.JFrame {
     }//GEN-LAST:event_fileStructureValueChanged
 
     /**
+     * Generate debug code.
+     * @param evt
+     */
+    private void menuItemRunGenCodeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemRunGenCodeActionPerformed
+        int activeTabIndex = tabbedPane.getSelectedIndex();
+        JTextPane activeTextPane = panes.get(activeTabIndex);
+        IOHelper helper = iohelpers.get(activeTabIndex);
+        int cursorPos = activeTextPane.getCaretPosition();
+        String text = activeTextPane.getText();
+
+        int start = text.lastIndexOf("\n", cursorPos);
+        int end = text.indexOf("\n", cursorPos);
+        String line = text.substring(start, end);
+
+        // find strings and remove
+        Pattern strs = Pattern.compile("'.*?'|\".*?\"");
+        Matcher matcher = strs.matcher(line);
+
+        while (matcher.find()) {
+            line = line.substring(0,
+                    matcher.start()) + line.substring(matcher.end()+1);
+        }
+
+        // find function names and remove
+        strs = Pattern.compile("\\b([\\w\\.::]*)\\(.*?\\)");
+        matcher = strs.matcher(line);
+
+        while (matcher.find()) {
+            line = line.substring(0,
+                    matcher.start(1)) + line.substring(matcher.end(1)+1);
+        }
+
+        // find variable names
+        ArrayList<String> variableNames = new ArrayList<>();
+        Pattern vars = Pattern.compile("\\w+");
+        matcher = vars.matcher(line);
+
+        while (matcher.find()) {
+            String varName = matcher.group();
+            if (!keywords.contains(varName))
+                variableNames.add(varName);
+        }
+
+        String debugLine = "";
+        // find current indentation
+        Pattern precedingWhitespacePattern = Pattern.compile("\\s*");
+        matcher = precedingWhitespacePattern.matcher(line);
+
+        matcher.find();
+
+        // preserve current indentation level
+        String currentIndentation = matcher.group();
+
+        debugLine += currentIndentation;
+
+        if (helper.getFileName().endsWith(".c")) {
+            debugLine += "fprinf(stderr, \"";
+            for (String name : variableNames) {
+                debugLine += name + ": %d, ";
+            }
+            debugLine = debugLine.substring(0, debugLine.length()-2);
+            debugLine += "\", ";
+            for (String name : variableNames) {
+                debugLine += name + ", ";
+            }
+            debugLine = debugLine.substring(0, debugLine.length()-2);
+            debugLine += ");  // debug\n";
+        }
+        else if (helper.getFileName().endsWith(".cpp")) {
+            debugLine += "std::cout << \"";
+            for (String name : variableNames) {
+                debugLine += name + ": \" << " + name + " << \" ";
+            }
+            debugLine = debugLine.substring(0, debugLine.length()-3);
+            debugLine += " std::endl;  // debug\n";
+        }
+
+        int cursor = activeTextPane.getCaretPosition();
+        activeTextPane.setText(text.substring(0, start) + debugLine +
+                text.substring(start+1));
+        activeTextPane.setCaretPosition(cursor);
+
+    }//GEN-LAST:event_menuItemRunGenCodeActionPerformed
+
+    private void menuItemRunRemCodeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemRunRemCodeActionPerformed
+        int activeTabIndex = tabbedPane.getSelectedIndex();
+        JTextPane activeTextPane = panes.get(activeTabIndex);
+        ArrayList<String> lines = extractLines();
+
+        String text = "";
+
+        for (String line : lines) {
+            if (!line.endsWith("// debug"))
+                text += line + "\n";
+        }
+
+        int cursor = activeTextPane.getCaretPosition();
+        activeTextPane.setText(text);
+        activeTextPane.setCaretPosition(cursor);
+    }//GEN-LAST:event_menuItemRunRemCodeActionPerformed
+
+    /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
@@ -843,6 +963,8 @@ public class Editor extends javax.swing.JFrame {
     private javax.swing.JMenuItem menuItemFileOpen;
     private javax.swing.JMenuItem menuItemFileSave;
     private javax.swing.JMenuItem menuItemFileSaveAs;
+    private javax.swing.JMenuItem menuItemRunGenCode;
+    private javax.swing.JMenuItem menuItemRunRemCode;
     private javax.swing.JMenuItem menuItemRunRunFile;
     private javax.swing.JMenuItem menuItemSnippetsLoadSnippet;
     private javax.swing.JMenuItem menuItemSnippetsSaveSnippet;

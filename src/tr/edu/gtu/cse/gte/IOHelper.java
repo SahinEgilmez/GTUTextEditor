@@ -28,7 +28,7 @@ public class IOHelper {
         this.parent = parent;
         dialog.setCurrentDirectory(new File(System.getProperty("user.home")));
     }
-    void save(ArrayList<String> lines) {
+    public void save(ArrayList<String> lines) {
         if (file == null) {
             int result = dialog.showSaveDialog(parent);
             if (result ==  JFileChooser.APPROVE_OPTION ) {
@@ -51,7 +51,7 @@ public class IOHelper {
 
     }
 
-    void saveAs(ArrayList<String> lines) {
+    public  void saveAs(ArrayList<String> lines) {
 
         int result = dialog.showSaveDialog(parent);
         if (result ==  JFileChooser.APPROVE_OPTION ) {

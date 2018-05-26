@@ -72,12 +72,7 @@ public class Editor extends javax.swing.JFrame {
 
         tempPane.addKeyListener(new KeyListener() {
             @Override
-            public void keyTyped(KeyEvent e) {
-                int activeTabIndex = tabbedPane.getSelectedIndex();
-                IOHelper helper = iohelpers.get(activeTabIndex);
-                tabbedPane.setTitleAt(activeTabIndex,
-                        "*" + helper.getFileName());
-            }
+            public void keyTyped(KeyEvent e) {}
 
             @Override
             public void keyPressed(KeyEvent e) {}
@@ -431,7 +426,6 @@ public class Editor extends javax.swing.JFrame {
         });
         jMenu1.add(menuItemFileSaveAs);
 
-        menuItemFileClose.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, java.awt.event.InputEvent.CTRL_MASK));
         menuItemFileClose.setText("Close");
         menuItemFileClose.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -705,9 +699,18 @@ public class Editor extends javax.swing.JFrame {
         IOHelper helper = iohelpers.get(activeTabIndex);
         jTextArea1.setText("");
         if (helper.getPath() != null) {
-            Process compile =
+            Process compile = null;
+            if (helper.getFileName().endsWith(".c")) {
+                compile =
                     Execute.execute(".", jTextArea1, "gcc", helper.getPath());
-            if (compile.exitValue() == 0) {
+            } else if (helper.getFileName().endsWith(".cpp")) {
+                compile =
+                    Execute.execute(".", jTextArea1, "g++", helper.getPath());
+            }
+            else {
+                jTextArea1.setText("Error: editor cannot run this file");
+            }
+            if (compile != null && compile.exitValue() == 0) {
                 Process p = Execute.execute(".", jTextArea1, "./a.out");
                 jTextArea1.append("\nProcess exit value: " + p.exitValue());
                 try {

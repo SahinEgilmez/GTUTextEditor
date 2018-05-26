@@ -50,7 +50,6 @@ public class Editor extends javax.swing.JFrame {
         loadSnippets();
         addANewTab();
 
-
         //These actions come from the default editor kit.
         //Get the ones we want and stick them in the menu.
         menuItemEditCut.setAction(new DefaultEditorKit.CutAction());
@@ -76,7 +75,8 @@ public class Editor extends javax.swing.JFrame {
             public void keyTyped(KeyEvent e) {}
 
             @Override
-            public void keyPressed(KeyEvent e) {}
+            public void keyPressed(KeyEvent e) {
+            }
 
             @Override
             public void keyReleased(KeyEvent e) {
@@ -84,8 +84,8 @@ public class Editor extends javax.swing.JFrame {
                 JTextPane activeTextPane = panes.get(activeTabIndex);
 
                 int caretPos = activeTextPane.getCaretPosition();
-                AbstractDocument doc =
-                        (AbstractDocument) activeTextPane.getDocument();
+                AbstractDocument doc
+                        = (AbstractDocument) activeTextPane.getDocument();
 
                 String text = null;
                 String fullText = null;
@@ -136,14 +136,16 @@ public class Editor extends javax.swing.JFrame {
                         }
 
                         @Override
-                        public void addListDataListener(ListDataListener l) {}
+                        public void addListDataListener(ListDataListener l) {
+                        }
 
                         @Override
-                        public void removeListDataListener(ListDataListener l) {}
+                        public void removeListDataListener(ListDataListener l) {
+                        }
                     });
 
-                    MouseListener[] mListeners =
-                            suggestionList.getMouseListeners();
+                    MouseListener[] mListeners
+                            = suggestionList.getMouseListeners();
 
                     for (int i = 3; i < mListeners.length; i += 1) {
                         suggestionList.removeMouseListener(mListeners[i]);
@@ -159,10 +161,10 @@ public class Editor extends javax.swing.JFrame {
                                         suggestionList.getSelectedValue(),
                                         null);
 
-                                int activeTabIndex =
-                                        tabbedPane.getSelectedIndex();
-                                JTextPane activeTextPane =
-                                        panes.get(activeTabIndex);
+                                int activeTabIndex
+                                        = tabbedPane.getSelectedIndex();
+                                JTextPane activeTextPane
+                                        = panes.get(activeTabIndex);
 
                                 activeTextPane.requestFocusInWindow();
 
@@ -172,16 +174,20 @@ public class Editor extends javax.swing.JFrame {
                         }
 
                         @Override
-                        public void mousePressed(MouseEvent e) {}
+                        public void mousePressed(MouseEvent e) {
+                        }
 
                         @Override
-                        public void mouseReleased(MouseEvent e) {}
+                        public void mouseReleased(MouseEvent e) {
+                        }
 
                         @Override
-                        public void mouseEntered(MouseEvent e) {}
+                        public void mouseEntered(MouseEvent e) {
+                        }
 
                         @Override
-                        public void mouseExited(MouseEvent e) {}
+                        public void mouseExited(MouseEvent e) {
+                        }
                     });
                 }
             }
@@ -197,7 +203,7 @@ public class Editor extends javax.swing.JFrame {
         scrollPane.setRowHeaderView(lineNumber);
 
         tabbedPane.addTab("new_file", scrollPane);
-        tabbedPane.setSelectedIndex(tabbedPane.getTabCount()-1);
+        tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 1);
 
         IOHelper tempHelper = new IOHelper(this);
         iohelpers.add(tempHelper);
@@ -210,8 +216,9 @@ public class Editor extends javax.swing.JFrame {
         try {
             keywords = Files.readAllLines(Paths.get(KEYWORDS_FILE),
                     StandardCharsets.UTF_8);
-        } catch (IOException ignore) {}
-}
+        } catch (IOException ignore) {
+        }
+    }
 
     /**
      * Sets document filter to our special implementation GTEDocumentFilter.
@@ -219,7 +226,7 @@ public class Editor extends javax.swing.JFrame {
     private void setDocumentFilter(JTextPane textPane) {
         StyledDocument styledDoc = textPane.getStyledDocument();
         if (styledDoc instanceof AbstractDocument) {
-            AbstractDocument doc = (AbstractDocument)styledDoc;
+            AbstractDocument doc = (AbstractDocument) styledDoc;
             doc.setDocumentFilter(new GTEDocumentFilter(keywords, textPane));
         } else {
             System.err.println("Text pane's document"
@@ -239,7 +246,8 @@ public class Editor extends javax.swing.JFrame {
                 String[] pair = line.split(":");
                 snippets.put(pair[0], pair[1].replace(SNIPPET_SEP, "\n"));
             }
-        } catch (IOException ignore) {}
+        } catch (IOException ignore) {
+        }
     }
 
     /**
@@ -253,7 +261,8 @@ public class Editor extends javax.swing.JFrame {
         }
         try {
             Files.write(Paths.get(SNIPPETS_FILE), lines);
-        } catch (IOException ignore) {}
+        } catch (IOException ignore) {
+        }
     }
 
     private ArrayList<String> extractLines() {
@@ -349,9 +358,11 @@ public class Editor extends javax.swing.JFrame {
 
         javax.swing.tree.DefaultMutableTreeNode treeNode1 = new javax.swing.tree.DefaultMutableTreeNode("root");
         fileStructure.setModel(new javax.swing.tree.DefaultTreeModel(treeNode1));
+        fileStructure.setToolTipText("");
         fileStructure.setAutoscrolls(true);
         fileStructure.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         fileStructure.setDebugGraphicsOptions(javax.swing.DebugGraphics.BUFFERED_OPTION);
+        fileStructure.setEditable(true);
         fileStructure.setPreferredSize(new java.awt.Dimension(120, 0));
         fileStructure.setRootVisible(false);
         fileStructure.addTreeSelectionListener(new javax.swing.event.TreeSelectionListener() {
@@ -544,7 +555,7 @@ public class Editor extends javax.swing.JFrame {
         JTextPane activeTextPane = panes.get(activeTabIndex);
 
         String value = activeTextPane.getSelectedText();
-        String key =  JOptionPane.showInputDialog("Enter key for this snippet");
+        String key = JOptionPane.showInputDialog("Enter key for this snippet");
 
         if (key != null) {
             snippets.put(key, value);
@@ -572,10 +583,10 @@ public class Editor extends javax.swing.JFrame {
         addANewTab();
         int activeTabIndex = tabbedPane.getSelectedIndex();
         IOHelper helper = iohelpers.get(activeTabIndex);
-        String path=helper.getPath();
+        String path = helper.getPath();
         if (path != null) {
-            FileStructure fileStructures= new FileStructure();
-            FileTreeModel model=fileStructures.getModel(path);
+            FileStructure fileStructures = new FileStructure();
+            FileTreeModel model = fileStructures.getModel(path);
             fileStructure.setModel(model);
         }
     }//GEN-LAST:event_menuItemFileNewActionPerformed
@@ -590,17 +601,15 @@ public class Editor extends javax.swing.JFrame {
             activeTabIndex = tabbedPane.getSelectedIndex();
             if (activeTabIndex != -1) {
                 IOHelper helper = iohelpers.get(activeTabIndex);
-                String path=helper.getPath();
+                String path = helper.getPath();
                 if (path != null) {
-                    FileStructure fileStructures= new FileStructure();
-                    FileTreeModel model=fileStructures.getModel(path);
+                    FileStructure fileStructures = new FileStructure();
+                    FileTreeModel model = fileStructures.getModel(path);
                     fileStructure.setModel(model);
-                }
-                else {
+                } else {
                     fileStructure.setModel(new FileTreeModel(null));
                 }
-            }
-            else {
+            } else {
                 fileStructure.setModel(new FileTreeModel(null));
             }
         }
@@ -626,20 +635,19 @@ public class Editor extends javax.swing.JFrame {
                 tabbedPane.setTitleAt(activeTabIndex, helper.getFileName());
 
                 // insert text
-                AbstractDocument doc =
-                        (AbstractDocument) activeTextPane.getDocument();
+                AbstractDocument doc
+                        = (AbstractDocument) activeTextPane.getDocument();
                 doc.insertString(0, text, null);
             } catch (BadLocationException ex) {
                 ex.printStackTrace();
             }
-            String path=helper.getPath();
+            String path = helper.getPath();
             if (path != null) {
-                FileStructure fileStructures= new FileStructure();
-                FileTreeModel model=fileStructures.getModel(path);
+                FileStructure fileStructures = new FileStructure();
+                FileTreeModel model = fileStructures.getModel(path);
                 fileStructure.setModel(model);
             }
-        }
-        else {
+        } else {
             panes.remove(activeTabIndex);
             iohelpers.remove(activeTabIndex);
             tabbedPane.remove(activeTabIndex);
@@ -656,13 +664,12 @@ public class Editor extends javax.swing.JFrame {
         tabbedPane.setTitleAt(activeTabIndex, helper.getFileName());
 
         // update file structure
-        String path=helper.getPath();
+        String path = helper.getPath();
         if (path != null) {
-            FileStructure fileStructures= new FileStructure();
-            FileTreeModel model=fileStructures.getModel(path);
+            FileStructure fileStructures = new FileStructure();
+            FileTreeModel model = fileStructures.getModel(path);
             fileStructure.setModel(model);
-        }
-        else {
+        } else {
             fileStructure.setModel(null);
         }
     }//GEN-LAST:event_menuItemFileSaveActionPerformed
@@ -677,13 +684,12 @@ public class Editor extends javax.swing.JFrame {
         tabbedPane.setTitleAt(activeTabIndex, helper.getFileName());
 
         // update file structure
-        String path=helper.getPath();
+        String path = helper.getPath();
         if (path != null) {
-            FileStructure fileStructures= new FileStructure();
-            FileTreeModel model=fileStructures.getModel(path);
+            FileStructure fileStructures = new FileStructure();
+            FileTreeModel model = fileStructures.getModel(path);
             fileStructure.setModel(model);
-        }
-        else {
+        } else {
             fileStructure.setModel(null);
         }
     }//GEN-LAST:event_menuItemFileSaveAsActionPerformed
@@ -713,8 +719,7 @@ public class Editor extends javax.swing.JFrame {
                     ex.printStackTrace();
                 }
             }
-        }
-        else {
+        } else {
             jTextArea1.setText("Error: please save the file first");
         }
     }//GEN-LAST:event_menuItemRunRunFileActionPerformed
@@ -722,27 +727,25 @@ public class Editor extends javax.swing.JFrame {
     private void tabbedPaneMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabbedPaneMouseClicked
         int activeTabIndex = tabbedPane.getSelectedIndex();
         IOHelper helper = iohelpers.get(activeTabIndex);
-        String path=helper.getPath();
+        String path = helper.getPath();
         if (path != null) {
-            FileStructure fileStructures= new FileStructure();
-            FileTreeModel model=fileStructures.getModel(path);
+            FileStructure fileStructures = new FileStructure();
+            FileTreeModel model = fileStructures.getModel(path);
             fileStructure.setModel(model);
-        }
-        else {
+        } else {
             fileStructure.setModel(null);
         }
     }//GEN-LAST:event_tabbedPaneMouseClicked
 
     private void fileStructureValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_fileStructureValueChanged
-        String path =
-                fileStructure.getSelectionPath().getPathComponent(1).toString();
-
+        String path = ( (FileHelper) fileStructure.getSelectionPath().getPathComponent(1)).getFile().getAbsolutePath();
+        
         addANewTab();
-
         // open a file and read its contents
         int activeTabIndex = tabbedPane.getSelectedIndex();
         IOHelper helper = iohelpers.get(activeTabIndex);
         ArrayList<String> lines = helper.open(path);
+
 
         if (lines != null) {
             try {
@@ -756,20 +759,19 @@ public class Editor extends javax.swing.JFrame {
                 tabbedPane.setTitleAt(activeTabIndex, helper.getFileName());
 
                 // insert text
-                AbstractDocument doc =
-                        (AbstractDocument) activeTextPane.getDocument();
+                AbstractDocument doc
+                        = (AbstractDocument) activeTextPane.getDocument();
                 doc.insertString(0, text, null);
             } catch (BadLocationException ex) {
                 ex.printStackTrace();
             }
 //            String path=helper.getPath();
             if (path != null) {
-                FileStructure fileStructures= new FileStructure();
-                FileTreeModel model=fileStructures.getModel(path);
+                FileStructure fileStructures = new FileStructure();
+                FileTreeModel model = fileStructures.getModel(path);
                 fileStructure.setModel(model);
             }
-        }
-        else {
+        } else {
             panes.remove(activeTabIndex);
             iohelpers.remove(activeTabIndex);
             tabbedPane.remove(activeTabIndex);

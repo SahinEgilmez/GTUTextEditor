@@ -19,6 +19,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.ListModel;
+import javax.swing.ListSelectionModel;
 import javax.swing.event.ListDataListener;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.BadLocationException;
@@ -52,10 +53,14 @@ public class Editor extends javax.swing.JFrame {
         //These actions come from the default editor kit.
         //Get the ones we want and stick them in the menu.
         menuItemEditCut.setAction(new DefaultEditorKit.CutAction());
+        menuItemEditCut.setText("Cut");
         menuItemEditCopy.setAction(new DefaultEditorKit.CopyAction());
+        menuItemEditCopy.setText("Copy");
         menuItemEditPaste.setAction(new DefaultEditorKit.PasteAction());
+        menuItemEditPaste.setText("Paste");
 
-
+        suggestionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        panes.get(0).requestFocusInWindow();
     }
 
     /**
@@ -64,16 +69,15 @@ public class Editor extends javax.swing.JFrame {
     private void addANewTab() {
         JTextPane tempPane = new JTextPane();
         setDocumentFilter(tempPane);
-//
-//        JPanel panel = new JPanel( new BorderLayout() );
-//        panel.add(tempPane, BorderLayout.CENTER);
-//        TextLineNumber lineNumber = new TextLineNumber(tempPane, 3);
-//        panel.add(lineNumber, BorderLayout.EAST);
-//        JScrollPane scrollPane = new JScrollPane( panel );
 
         tempPane.addKeyListener(new KeyListener() {
             @Override
-            public void keyTyped(KeyEvent e) {}
+            public void keyTyped(KeyEvent e) {
+                int activeTabIndex = tabbedPane.getSelectedIndex();
+                IOHelper helper = iohelpers.get(activeTabIndex);
+                tabbedPane.setTitleAt(activeTabIndex,
+                        "*" + helper.getFileName());
+            }
 
             @Override
             public void keyPressed(KeyEvent e) {}
@@ -111,7 +115,6 @@ public class Editor extends javax.swing.JFrame {
                     matcher.find();
 
                     String currentWord = matcher.group(1);
-                    System.out.println(currentWord);
 
                     String[] linesArray = fullText.split("\n");
 
@@ -121,16 +124,9 @@ public class Editor extends javax.swing.JFrame {
                         lines.add(line);
                     }
 
-                    System.out.println("cw: " + currentWord);
-                    System.out.println("cw: " + currentWord.length());
-                    System.out.println("start: " + matcher.start(1));
-                    System.out.println("len: " + currentWord.length());
-                    System.out.println("sel: " + suggestionList.getSelectedValue());
-
                     sm.update(lines);
 
                     ArrayList<String> suggestions = sm.search(currentWord);
-                    System.out.println(suggestions);
 
                     suggestionList.setModel(new ListModel<String>() {
                         @Override
@@ -144,29 +140,36 @@ public class Editor extends javax.swing.JFrame {
                         }
 
                         @Override
-                        public void addListDataListener(ListDataListener l) {
-                            System.out.println("add");
-                        }
+                        public void addListDataListener(ListDataListener l) {}
 
                         @Override
-                        public void removeListDataListener(ListDataListener l) {
-                            System.out.println("rem");
-                        }
+                        public void removeListDataListener(ListDataListener l) {}
                     });
+
+                    MouseListener[] mListeners =
+                            suggestionList.getMouseListeners();
+
+                    for (int i = 3; i < mListeners.length; i += 1) {
+                        suggestionList.removeMouseListener(mListeners[i]);
+                    }
 
                     suggestionList.addMouseListener(new MouseListener() {
                         @Override
                         public void mouseClicked(MouseEvent e) {
                             try {
-                                System.out.println("start: " + matcher.start(1));
-                                System.out.println("len: " + currentWord.length());
-                                System.out.println("sel: " + suggestionList.getSelectedValue());
-
-                                doc.insertString(
+                                doc.replace(
                                         caretPos - currentWord.length(),
-//                                        currentWord.length(),
+                                        currentWord.length(),
                                         suggestionList.getSelectedValue(),
                                         null);
+
+                                int activeTabIndex =
+                                        tabbedPane.getSelectedIndex();
+                                JTextPane activeTextPane =
+                                        panes.get(activeTabIndex);
+
+                                activeTextPane.requestFocusInWindow();
+
                             } catch (BadLocationException ex) {
                                 ex.printStackTrace();
                             }
@@ -188,8 +191,16 @@ public class Editor extends javax.swing.JFrame {
             }
         });
 
+        LineNumber lineNumber = new LineNumber(tempPane);
+        lineNumber.setPreferredSize(2);
+
         panes.add(tempPane);
-        tabbedPane.addTab("new_file", new JScrollPane(tempPane));
+
+        JScrollPane scrollPane = new JScrollPane(tempPane);
+
+        scrollPane.setRowHeaderView(lineNumber);
+
+        tabbedPane.addTab("new_file", scrollPane);
         tabbedPane.setSelectedIndex(tabbedPane.getTabCount()-1);
 
         IOHelper tempHelper = new IOHelper(this);
@@ -213,7 +224,7 @@ public class Editor extends javax.swing.JFrame {
         StyledDocument styledDoc = textPane.getStyledDocument();
         if (styledDoc instanceof AbstractDocument) {
             AbstractDocument doc = (AbstractDocument)styledDoc;
-            doc.setDocumentFilter(new GTEDocumentFilter(keywords));
+            doc.setDocumentFilter(new GTEDocumentFilter(keywords, textPane));
         } else {
             System.err.println("Text pane's document"
                     + " isn't an AbstractDocument!");
@@ -323,26 +334,42 @@ public class Editor extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("GTU Text Editor");
 
-        jSplitPane2.setDividerLocation(250);
-        jSplitPane2.setDividerSize(3);
+        jSplitPane2.setDividerLocation(220);
         jSplitPane2.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
         jSplitPane2.setResizeWeight(0.8);
-        jSplitPane2.setAutoscrolls(true);
         jSplitPane2.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         jSplitPane2.setOneTouchExpandable(true);
 
+        jSplitPane1.setDividerLocation(150);
         jSplitPane1.setResizeWeight(0.1);
+        jSplitPane1.setOneTouchExpandable(true);
+
+        tabbedPane.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tabbedPaneMouseClicked(evt);
+            }
+        });
         jSplitPane1.setRightComponent(tabbedPane);
 
+        javax.swing.tree.DefaultMutableTreeNode treeNode1 = new javax.swing.tree.DefaultMutableTreeNode("root");
+        fileStructure.setModel(new javax.swing.tree.DefaultTreeModel(treeNode1));
         fileStructure.setAutoscrolls(true);
         fileStructure.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         fileStructure.setDebugGraphicsOptions(javax.swing.DebugGraphics.BUFFERED_OPTION);
+        fileStructure.setPreferredSize(new java.awt.Dimension(120, 0));
+        fileStructure.setRootVisible(false);
+        fileStructure.addTreeSelectionListener(new javax.swing.event.TreeSelectionListener() {
+            public void valueChanged(javax.swing.event.TreeSelectionEvent evt) {
+                fileStructureValueChanged(evt);
+            }
+        });
         jScrollPane4.setViewportView(fileStructure);
 
         jSplitPane1.setLeftComponent(jScrollPane4);
 
         jSplitPane2.setLeftComponent(jSplitPane1);
 
+        jSplitPane3.setDividerLocation(150);
         jSplitPane3.setResizeWeight(0.1);
 
         jTextArea1.setColumns(20);
@@ -553,6 +580,14 @@ public class Editor extends javax.swing.JFrame {
 
     private void menuItemFileNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemFileNewActionPerformed
         addANewTab();
+        int activeTabIndex = tabbedPane.getSelectedIndex();
+        IOHelper helper = iohelpers.get(activeTabIndex);
+        String path=helper.getPath();
+        if (path != null) {
+            FileStructure fileStructures= new FileStructure();
+            FileTreeModel model=fileStructures.getModel(path);
+            fileStructure.setModel(model);
+        }
     }//GEN-LAST:event_menuItemFileNewActionPerformed
 
     private void menuItemFileCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemFileCloseActionPerformed
@@ -562,6 +597,22 @@ public class Editor extends javax.swing.JFrame {
             tabbedPane.remove(activeTabIndex);
             panes.remove(activeTabIndex);
             iohelpers.remove(activeTabIndex);
+            activeTabIndex = tabbedPane.getSelectedIndex();
+            if (activeTabIndex != -1) {
+                IOHelper helper = iohelpers.get(activeTabIndex);
+                String path=helper.getPath();
+                if (path != null) {
+                    FileStructure fileStructures= new FileStructure();
+                    FileTreeModel model=fileStructures.getModel(path);
+                    fileStructure.setModel(model);
+                }
+                else {
+                    fileStructure.setModel(new FileTreeModel(null));
+                }
+            }
+            else {
+                fileStructure.setModel(new FileTreeModel(null));
+            }
         }
     }//GEN-LAST:event_menuItemFileCloseActionPerformed
 
@@ -591,6 +642,12 @@ public class Editor extends javax.swing.JFrame {
             } catch (BadLocationException ex) {
                 ex.printStackTrace();
             }
+            String path=helper.getPath();
+            if (path != null) {
+                FileStructure fileStructures= new FileStructure();
+                FileTreeModel model=fileStructures.getModel(path);
+                fileStructure.setModel(model);
+            }
         }
         else {
             panes.remove(activeTabIndex);
@@ -604,9 +661,22 @@ public class Editor extends javax.swing.JFrame {
         IOHelper helper = iohelpers.get(activeTabIndex);
         ArrayList<String> lines = extractLines();
 
+
+        System.out.println("save");
         helper.save(lines);
 
         tabbedPane.setTitleAt(activeTabIndex, helper.getFileName());
+
+        // update file structure
+        String path=helper.getPath();
+        if (path != null) {
+            FileStructure fileStructures= new FileStructure();
+            FileTreeModel model=fileStructures.getModel(path);
+            fileStructure.setModel(model);
+        }
+        else {
+            fileStructure.setModel(null);
+        }
     }//GEN-LAST:event_menuItemFileSaveActionPerformed
 
     private void menuItemFileSaveAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemFileSaveAsActionPerformed
@@ -617,19 +687,101 @@ public class Editor extends javax.swing.JFrame {
         helper.saveAs(lines);
 
         tabbedPane.setTitleAt(activeTabIndex, helper.getFileName());
+
+        // update file structure
+        String path=helper.getPath();
+        if (path != null) {
+            FileStructure fileStructures= new FileStructure();
+            FileTreeModel model=fileStructures.getModel(path);
+            fileStructure.setModel(model);
+        }
+        else {
+            fileStructure.setModel(null);
+        }
     }//GEN-LAST:event_menuItemFileSaveAsActionPerformed
 
     private void menuItemRunRunFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemRunRunFileActionPerformed
         int activeTabIndex = tabbedPane.getSelectedIndex();
         IOHelper helper = iohelpers.get(activeTabIndex);
-        Execute.execute(".", jTextArea1, "gcc", helper.getPath());
-        Process p = Execute.execute(".", jTextArea1, "./a.out");
-        jTextArea1.append("\nProcess exit value: " + p.exitValue());
+        jTextArea1.setText("");
+        if (helper.getPath() != null) {
+            Process compile =
+                    Execute.execute(".", jTextArea1, "gcc", helper.getPath());
+            if (compile.exitValue() == 0) {
+                Process p = Execute.execute(".", jTextArea1, "./a.out");
+                jTextArea1.append("\nProcess exit value: " + p.exitValue());
+                try {
+                    Files.delete(Paths.get("./a.out"));
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+        else {
+            jTextArea1.setText("Error: please save the file first");
+        }
     }//GEN-LAST:event_menuItemRunRunFileActionPerformed
 
     private void suggestionListMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_suggestionListMouseClicked
         System.out.println(suggestionList.getSelectedValue());
     }//GEN-LAST:event_suggestionListMouseClicked
+
+    private void tabbedPaneMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabbedPaneMouseClicked
+        int activeTabIndex = tabbedPane.getSelectedIndex();
+        IOHelper helper = iohelpers.get(activeTabIndex);
+        String path=helper.getPath();
+        if (path != null) {
+            FileStructure fileStructures= new FileStructure();
+            FileTreeModel model=fileStructures.getModel(path);
+            fileStructure.setModel(model);
+        }
+        else {
+            fileStructure.setModel(null);
+        }
+    }//GEN-LAST:event_tabbedPaneMouseClicked
+
+    private void fileStructureValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_fileStructureValueChanged
+        String path =
+                fileStructure.getSelectionPath().getPathComponent(1).toString();
+
+        addANewTab();
+
+        // open a file and read its contents
+        int activeTabIndex = tabbedPane.getSelectedIndex();
+        IOHelper helper = iohelpers.get(activeTabIndex);
+        ArrayList<String> lines = helper.open(path);
+
+        if (lines != null) {
+            try {
+                String text = "";
+                // build text
+                for (String line : lines) {
+                    text += line;
+                }
+
+                JTextPane activeTextPane = panes.get(activeTabIndex);
+                tabbedPane.setTitleAt(activeTabIndex, helper.getFileName());
+
+                // insert text
+                AbstractDocument doc =
+                        (AbstractDocument) activeTextPane.getDocument();
+                doc.insertString(0, text, null);
+            } catch (BadLocationException ex) {
+                ex.printStackTrace();
+            }
+//            String path=helper.getPath();
+            if (path != null) {
+                FileStructure fileStructures= new FileStructure();
+                FileTreeModel model=fileStructures.getModel(path);
+                fileStructure.setModel(model);
+            }
+        }
+        else {
+            panes.remove(activeTabIndex);
+            iohelpers.remove(activeTabIndex);
+            tabbedPane.remove(activeTabIndex);
+        }
+    }//GEN-LAST:event_fileStructureValueChanged
 
     /**
      * @param args the command line arguments

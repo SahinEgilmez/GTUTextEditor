@@ -1,25 +1,35 @@
 package tr.edu.gtu.cse.gte;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Point;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.*;
+import java.util.logging.Level;
+import javax.swing.BorderFactory;
+import javax.swing.JFrame;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextPane;
 import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ListDataListener;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.BadLocationException;
@@ -41,6 +51,15 @@ public class Editor extends javax.swing.JFrame {
     private List<IOHelper> iohelpers = new ArrayList<>();
     private SuggestionManager sm = new SuggestionManager(new ArrayList<String>());
 
+    private ArrayList<Stack<String>> histories = new ArrayList<>();
+    private ArrayList<Stack<Integer>> cursors = new ArrayList<>();
+    
+    //private String lastText = "";
+    
+    private ArrayList<String> lastTextes = new ArrayList<>();
+    private ArrayList<Integer> lastCursor = new ArrayList<>();
+   
+ 
     /**
      * Creates new form Editor
      */
@@ -49,6 +68,7 @@ public class Editor extends javax.swing.JFrame {
         loadKeywords();
         loadSnippets();
         addANewTab();
+        takeBackUp();
 
         //These actions come from the default editor kit.
         //Get the ones we want and stick them in the menu.
@@ -69,7 +89,13 @@ public class Editor extends javax.swing.JFrame {
     private void addANewTab() {
         JTextPane tempPane = new JTextPane();
         setDocumentFilter(tempPane);
-
+        histories.add(new Stack<String>());
+        cursors.add(new Stack<Integer>());
+        lastTextes.add("");
+        lastCursor.add(0);
+        
+        //System.out.println("size of history stack list : " + histories.size());
+        
         tempPane.addKeyListener(new KeyListener() {
             @Override
             public void keyTyped(KeyEvent e) {}
@@ -289,6 +315,38 @@ public class Editor extends javax.swing.JFrame {
 
         return lines;
     }
+       
+    void takeBackUp() {
+        
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+  
+                for ( ; ; ) {
+                    
+                    int activeTabIndex = tabbedPane.getSelectedIndex();
+                    if (activeTabIndex != -1 ) {
+                        
+                        JTextPane activeTextPane = panes.get(activeTabIndex); 
+                        if ((histories.get(activeTabIndex).isEmpty() || 
+                            !histories.get(activeTabIndex).peek().equals(activeTextPane.getText()))
+                              &&  !activeTextPane.getText().equals("")) {
+                           
+                            histories.get(activeTabIndex).push(activeTextPane.getText());
+                            cursors.get(activeTabIndex).push(activeTextPane.getCaretPosition());
+                            System.out.println("Pushed text : " + activeTextPane.getText());
+                        }
+                    }
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(Editor.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        }).start();
+        
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -461,7 +519,11 @@ public class Editor extends javax.swing.JFrame {
 
         menuItemEditUndo.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Z, java.awt.event.InputEvent.CTRL_MASK));
         menuItemEditUndo.setText("Undo");
-        menuItemEditUndo.setEnabled(false);
+        menuItemEditUndo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemEditUndoActionPerformed(evt);
+            }
+        });
         jMenu2.add(menuItemEditUndo);
 
         menuItemEditRedo.setText("Redo");
@@ -625,12 +687,18 @@ public class Editor extends javax.swing.JFrame {
 
     private void menuItemFileCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemFileCloseActionPerformed
         int activeTabIndex = tabbedPane.getSelectedIndex();
-
+        System.out.println(activeTabIndex);
         if (activeTabIndex != -1) {
             tabbedPane.remove(activeTabIndex);
             panes.remove(activeTabIndex);
+            histories.remove(activeTabIndex);
+            cursors.remove(activeTabIndex);
             iohelpers.remove(activeTabIndex);
             activeTabIndex = tabbedPane.getSelectedIndex();
+            
+            // there are multiple tab, when first tab is closed
+            // acitveTabIndex set to 0
+            // so ArrayIndexOfBoundException occur
             if (activeTabIndex != -1) {
                 IOHelper helper = iohelpers.get(activeTabIndex);
                 String path = helper.getPath();
@@ -670,6 +738,12 @@ public class Editor extends javax.swing.JFrame {
                 AbstractDocument doc
                         = (AbstractDocument) activeTextPane.getDocument();
                 doc.insertString(0, text, null);
+               
+                
+                lastTextes.set(activeTabIndex, text);
+                lastCursor.set(activeTabIndex, activeTextPane.getCaretPosition());
+                
+                //System.out.println(lastText);
             } catch (BadLocationException ex) {
                 ex.printStackTrace();
             }
@@ -756,7 +830,11 @@ public class Editor extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_menuItemRunRunFileActionPerformed
 
-    private void tabbedPaneMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabbedPaneMouseClicked
+    private void suggestionListMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_suggestionListMouseClicked
+
+    }//GEN-LAST:event_suggestionListMouseClicked
+
+    private void tabbedPaneMouseClicked(java.awt.event.MouseEvent evt) {                                        
         int activeTabIndex = tabbedPane.getSelectedIndex();
         IOHelper helper = iohelpers.get(activeTabIndex);
         String path = helper.getPath();
@@ -767,7 +845,7 @@ public class Editor extends javax.swing.JFrame {
         } else {
             fileStructure.setModel(null);
         }
-    }//GEN-LAST:event_tabbedPaneMouseClicked
+    }                                       
 
     private void fileStructureValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_fileStructureValueChanged
         String path = ( (FileHelper) fileStructure.getSelectionPath().getPathComponent(1)).getFile().getAbsolutePath();
@@ -810,7 +888,36 @@ public class Editor extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_fileStructureValueChanged
 
+    private void menuItemEditUndoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemEditUndoActionPerformed
+        // TODO add your handling code here:
+        int activeTabIndex = tabbedPane.getSelectedIndex();
+        JTextPane activeTextPane = panes.get(activeTabIndex);
+        
+        
+        if (!histories.get(activeTabIndex).isEmpty())
+            histories.get(activeTabIndex).pop();
+        
+        if (!cursors.get(activeTabIndex).isEmpty())
+            cursors.get(activeTabIndex).pop();
+
+        
+        if (!histories.get(activeTabIndex).isEmpty()) 
+            activeTextPane.setText(histories.get(activeTabIndex).pop());
+        
+        if (!cursors.get(activeTabIndex).isEmpty())
+            activeTextPane.setCaretPosition(cursors.get(activeTabIndex).pop());
+        
+        else {
+            activeTextPane.setText(lastTextes.get(activeTabIndex));
+            activeTextPane.setCaretPosition(lastCursor.get(activeTabIndex));
+
+        }
+
+
+    }//GEN-LAST:event_menuItemEditUndoActionPerformed
+
     /**
+     * @param args the command line argumentste
      * Generate debug code.
      * @param evt
      */

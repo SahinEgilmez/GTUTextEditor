@@ -154,7 +154,7 @@ public class Editor extends javax.swing.JFrame {
                     MouseListener[] mListeners
                             = suggestionList.getMouseListeners();
 
-                    for (int i = 3; i < mListeners.length; i += 1) {
+                    for (int i = 2; i < mListeners.length; i += 1) {
                         suggestionList.removeMouseListener(mListeners[i]);
                     }
 
@@ -820,10 +820,6 @@ public class Editor extends javax.swing.JFrame {
             jTextArea1.setText("Error: please save the file first");
         }
     }//GEN-LAST:event_menuItemRunRunFileActionPerformed
-
-    private void suggestionListMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_suggestionListMouseClicked
-
-    }//GEN-LAST:event_suggestionListMouseClicked
 
     private void tabbedPaneMouseClicked(java.awt.event.MouseEvent evt) {
         int activeTabIndex = tabbedPane.getSelectedIndex();

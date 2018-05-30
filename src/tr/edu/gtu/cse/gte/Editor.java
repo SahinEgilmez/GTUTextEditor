@@ -336,6 +336,8 @@ public class Editor extends javax.swing.JFrame {
         jMenu6 = new javax.swing.JMenu();
         menuItemSnippetsSaveSnippet = new javax.swing.JMenuItem();
         menuItemSnippetsLoadSnippet = new javax.swing.JMenuItem();
+        jMenu4 = new javax.swing.JMenu();
+        menuItemIncsShowDeps = new javax.swing.JMenuItem();
         jMenu5 = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -542,6 +544,18 @@ public class Editor extends javax.swing.JFrame {
         jMenu6.add(menuItemSnippetsLoadSnippet);
 
         jMenuBar1.add(jMenu6);
+
+        jMenu4.setText("Includes");
+
+        menuItemIncsShowDeps.setText("Show Dependencies");
+        menuItemIncsShowDeps.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemIncsShowDepsActionPerformed(evt);
+            }
+        });
+        jMenu4.add(menuItemIncsShowDeps);
+
+        jMenuBar1.add(jMenu4);
 
         jMenu5.setText("About");
         jMenuBar1.add(jMenu5);
@@ -757,7 +771,7 @@ public class Editor extends javax.swing.JFrame {
 
     private void fileStructureValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_fileStructureValueChanged
         String path = ( (FileHelper) fileStructure.getSelectionPath().getPathComponent(1)).getFile().getAbsolutePath();
-        
+
         addANewTab();
         // open a file and read its contents
         int activeTabIndex = tabbedPane.getSelectedIndex();
@@ -898,6 +912,13 @@ public class Editor extends javax.swing.JFrame {
         activeTextPane.setCaretPosition(cursor);
     }//GEN-LAST:event_menuItemRunRemCodeActionPerformed
 
+    private void menuItemIncsShowDepsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemIncsShowDepsActionPerformed
+        int activeTabIndex = tabbedPane.getSelectedIndex();
+        IOHelper helper = iohelpers.get(activeTabIndex);
+
+        Includes.showIncludes(helper.getPath());
+    }//GEN-LAST:event_menuItemIncsShowDepsActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -938,6 +959,7 @@ public class Editor extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu3;
+    private javax.swing.JMenu jMenu4;
     private javax.swing.JMenu jMenu5;
     private javax.swing.JMenu jMenu6;
     private javax.swing.JMenuBar jMenuBar1;
@@ -965,6 +987,7 @@ public class Editor extends javax.swing.JFrame {
     private javax.swing.JMenuItem menuItemFileOpen;
     private javax.swing.JMenuItem menuItemFileSave;
     private javax.swing.JMenuItem menuItemFileSaveAs;
+    private javax.swing.JMenuItem menuItemIncsShowDeps;
     private javax.swing.JMenuItem menuItemRunGenCode;
     private javax.swing.JMenuItem menuItemRunRemCode;
     private javax.swing.JMenuItem menuItemRunRunFile;

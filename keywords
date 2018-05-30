@@ -93,3 +93,7 @@ wchar_t
 while
 xor
 xor_eq
+std
+cout
+cin
+endl

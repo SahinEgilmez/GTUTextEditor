@@ -1,26 +1,35 @@
 package tr.edu.gtu.cse.gte;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Point;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Stack;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.*;
+import java.util.logging.Level;
+import javax.swing.BorderFactory;
+import javax.swing.JFrame;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextPane;
 import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ListDataListener;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.BadLocationException;
@@ -42,10 +51,14 @@ public class Editor extends javax.swing.JFrame {
     private SuggestionManager sm = new SuggestionManager(new ArrayList<String>());
 
     private ArrayList<Stack<String>> histories = new ArrayList<>();
+    private ArrayList<Stack<Integer>> cursors = new ArrayList<>();
     
-    private String lastText = "";
+    //private String lastText = "";
     
-
+    private ArrayList<String> lastTextes = new ArrayList<>();
+    private ArrayList<Integer> lastCursor = new ArrayList<>();
+   
+ 
     /**
      * Creates new form Editor
      */
@@ -76,6 +89,9 @@ public class Editor extends javax.swing.JFrame {
         JTextPane tempPane = new JTextPane();
         setDocumentFilter(tempPane);
         histories.add(new Stack<String>());
+        cursors.add(new Stack<Integer>());
+        lastTextes.add("");
+        lastCursor.add(0);
         
         //System.out.println("size of history stack list : " + histories.size());
         
@@ -86,6 +102,7 @@ public class Editor extends javax.swing.JFrame {
                 IOHelper helper = iohelpers.get(activeTabIndex);
                 tabbedPane.setTitleAt(activeTabIndex,
                         "*" + helper.getFileName());
+
             }
 
             @Override
@@ -93,110 +110,7 @@ public class Editor extends javax.swing.JFrame {
 
             @Override
             public void keyReleased(KeyEvent e) {
-                int activeTabIndex = tabbedPane.getSelectedIndex();
-                JTextPane activeTextPane = panes.get(activeTabIndex);
 
-                int caretPos = activeTextPane.getCaretPosition();
-                AbstractDocument doc =
-                        (AbstractDocument) activeTextPane.getDocument();
-
-                String text = null;
-                String fullText = null;
-
-                try {
-                    text = doc.getText(0, caretPos);
-                    fullText = doc.getText(0, doc.getLength());
-                } catch (BadLocationException ex) {
-                    Logger.getLogger(Editor.class.getName()).log(Level.SEVERE, null, ex);
-                }
-
-                // extract last line
-                int startOfLine = text.lastIndexOf("\n") + 1;
-                String lastLine = text.substring(startOfLine, caretPos);
-
-                if (lastLine.trim().length() > 1) {
-                    // create a regex pattern and matcher for current word
-                    String currentWordPattern = ".*\\b(\\w+)";
-
-                    Pattern pattern = Pattern.compile(currentWordPattern);
-                    Matcher matcher = pattern.matcher(lastLine);
-
-                    matcher.find();
-
-                    String currentWord = matcher.group(1);
-
-                    String[] linesArray = fullText.split("\n");
-
-                    ArrayList<String> lines = new ArrayList<>();
-
-                    for (String line : linesArray) {
-                        lines.add(line);
-                    }
-
-                    sm.update(lines);
-
-                    ArrayList<String> suggestions = sm.search(currentWord);
-
-                    suggestionList.setModel(new ListModel<String>() {
-                        @Override
-                        public int getSize() {
-                            return suggestions.size();
-                        }
-
-                        @Override
-                        public String getElementAt(int index) {
-                            return suggestions.get(index);
-                        }
-
-                        @Override
-                        public void addListDataListener(ListDataListener l) {}
-
-                        @Override
-                        public void removeListDataListener(ListDataListener l) {}
-                    });
-
-                    MouseListener[] mListeners =
-                            suggestionList.getMouseListeners();
-
-                    for (int i = 3; i < mListeners.length; i += 1) {
-                        suggestionList.removeMouseListener(mListeners[i]);
-                    }
-
-                    suggestionList.addMouseListener(new MouseListener() {
-                        @Override
-                        public void mouseClicked(MouseEvent e) {
-                            try {
-                                doc.replace(
-                                        caretPos - currentWord.length(),
-                                        currentWord.length(),
-                                        suggestionList.getSelectedValue(),
-                                        null);
-
-                                int activeTabIndex =
-                                        tabbedPane.getSelectedIndex();
-                                JTextPane activeTextPane =
-                                        panes.get(activeTabIndex);
-
-                                activeTextPane.requestFocusInWindow();
-
-                            } catch (BadLocationException ex) {
-                                ex.printStackTrace();
-                            }
-                        }
-
-                        @Override
-                        public void mousePressed(MouseEvent e) {}
-
-                        @Override
-                        public void mouseReleased(MouseEvent e) {}
-
-                        @Override
-                        public void mouseEntered(MouseEvent e) {}
-
-                        @Override
-                        public void mouseExited(MouseEvent e) {}
-                    });
-                }
             }
         });
 
@@ -303,30 +217,24 @@ public class Editor extends javax.swing.JFrame {
                 for ( ; ; ) {
                     
                     int activeTabIndex = tabbedPane.getSelectedIndex();
-                   
                     if (activeTabIndex != -1 ) {
-                    
-                        JTextPane activeTextPane = panes.get(activeTabIndex); 
                         
-                       if ((histories.get(activeTabIndex).isEmpty() || 
+                        JTextPane activeTextPane = panes.get(activeTabIndex); 
+                        if ((histories.get(activeTabIndex).isEmpty() || 
                             !histories.get(activeTabIndex).peek().equals(activeTextPane.getText()))
                               &&  !activeTextPane.getText().equals("")) {
                            
                             histories.get(activeTabIndex).push(activeTextPane.getText());
-                            
+                            cursors.get(activeTabIndex).push(activeTextPane.getCaretPosition());
                             System.out.println("Pushed text : " + activeTextPane.getText());
                         }
-                        
-                        
                     }
                     try {
                         Thread.sleep(500);
                     } catch (InterruptedException ex) {
                         Logger.getLogger(Editor.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                
                 }
-                
             }
         }).start();
         
@@ -648,6 +556,7 @@ public class Editor extends javax.swing.JFrame {
             tabbedPane.remove(activeTabIndex);
             panes.remove(activeTabIndex);
             histories.remove(activeTabIndex);
+            cursors.remove(activeTabIndex);
             iohelpers.remove(activeTabIndex);
             activeTabIndex = tabbedPane.getSelectedIndex();
             
@@ -695,7 +604,11 @@ public class Editor extends javax.swing.JFrame {
                 AbstractDocument doc =
                         (AbstractDocument) activeTextPane.getDocument();
                 doc.insertString(0, text, null);
-                lastText = activeTextPane.getText();
+               
+                
+                lastTextes.set(activeTabIndex, text);
+                lastCursor.set(activeTabIndex, activeTextPane.getCaretPosition());
+                
                 //System.out.println(lastText);
             } catch (BadLocationException ex) {
                 ex.printStackTrace();
@@ -844,20 +757,29 @@ public class Editor extends javax.swing.JFrame {
     private void menuItemEditUndoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemEditUndoActionPerformed
         // TODO add your handling code here:
         int activeTabIndex = tabbedPane.getSelectedIndex();
-
         JTextPane activeTextPane = panes.get(activeTabIndex);
         
         
-        
-        
         if (!histories.get(activeTabIndex).isEmpty())
-            /*tempStr = */histories.get(activeTabIndex).pop();
-        if (!histories.get(activeTabIndex).isEmpty())
+            histories.get(activeTabIndex).pop();
+        
+        if (!cursors.get(activeTabIndex).isEmpty())
+            cursors.get(activeTabIndex).pop();
+
+        
+        if (!histories.get(activeTabIndex).isEmpty()) 
             activeTextPane.setText(histories.get(activeTabIndex).pop());
-        else 
-            activeTextPane.setText(lastText);
         
-        //activeTextPane.setText(history.pop());
+        if (!cursors.get(activeTabIndex).isEmpty())
+            activeTextPane.setCaretPosition(cursors.get(activeTabIndex).pop());
+        
+        else {
+            activeTextPane.setText(lastTextes.get(activeTabIndex));
+            activeTextPane.setCaretPosition(lastCursor.get(activeTabIndex));
+
+        }
+
+
     }//GEN-LAST:event_menuItemEditUndoActionPerformed
 
     /**

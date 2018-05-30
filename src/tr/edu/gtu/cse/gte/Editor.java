@@ -15,6 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
@@ -42,11 +43,8 @@ public class Editor extends javax.swing.JFrame {
     private ArrayList<Stack<String>> histories = new ArrayList<>();
     private ArrayList<Stack<Integer>> cursors = new ArrayList<>();
 
-    //private String lastText = "";
-
     private ArrayList<String> lastTextes = new ArrayList<>();
     private ArrayList<Integer> lastCursor = new ArrayList<>();
-
 
     /**
      * Creates new form Editor
@@ -87,8 +85,7 @@ public class Editor extends javax.swing.JFrame {
             public void keyTyped(KeyEvent e) {}
 
             @Override
-            public void keyPressed(KeyEvent e) {
-            }
+            public void keyPressed(KeyEvent e) {}
 
             @Override
             public void keyReleased(KeyEvent e) {
@@ -148,12 +145,10 @@ public class Editor extends javax.swing.JFrame {
                         }
 
                         @Override
-                        public void addListDataListener(ListDataListener l) {
-                        }
+                        public void addListDataListener(ListDataListener l) {}
 
                         @Override
-                        public void removeListDataListener(ListDataListener l) {
-                        }
+                        public void removeListDataListener(ListDataListener l) {}
                     });
 
                     MouseListener[] mListeners
@@ -186,20 +181,16 @@ public class Editor extends javax.swing.JFrame {
                         }
 
                         @Override
-                        public void mousePressed(MouseEvent e) {
-                        }
+                        public void mousePressed(MouseEvent e) {}
 
                         @Override
-                        public void mouseReleased(MouseEvent e) {
-                        }
+                        public void mouseReleased(MouseEvent e) {}
 
                         @Override
-                        public void mouseEntered(MouseEvent e) {
-                        }
+                        public void mouseEntered(MouseEvent e) {}
 
                         @Override
-                        public void mouseExited(MouseEvent e) {
-                        }
+                        public void mouseExited(MouseEvent e) {}
                     });
                 }
             }
@@ -248,7 +239,7 @@ public class Editor extends javax.swing.JFrame {
     }
 
     /**
-     * Loads snippets from SNIPPETS_FILE.s
+     * Loads snippets from SNIPPETS_FILE.
      */
     private void loadSnippets() {
         try {
@@ -366,6 +357,8 @@ public class Editor extends javax.swing.JFrame {
         menuItemEditUndo = new javax.swing.JMenuItem();
         menuItemEditRedo = new javax.swing.JMenuItem();
         jSeparator3 = new javax.swing.JPopupMenu.Separator();
+        jMenuItem1 = new javax.swing.JMenuItem();
+        jMenuItem2 = new javax.swing.JMenuItem();
         menuItemEditCut = new javax.swing.JMenuItem();
         menuItemEditCopy = new javax.swing.JMenuItem();
         menuItemEditPaste = new javax.swing.JMenuItem();
@@ -515,6 +508,24 @@ public class Editor extends javax.swing.JFrame {
         menuItemEditRedo.setEnabled(false);
         jMenu2.add(menuItemEditRedo);
         jMenu2.add(jSeparator3);
+
+        jMenuItem1.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, java.awt.event.InputEvent.CTRL_MASK));
+        jMenuItem1.setText("Find");
+        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem1ActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jMenuItem1);
+
+        jMenuItem2.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_H, java.awt.event.InputEvent.CTRL_MASK));
+        jMenuItem2.setText("Replace");
+        jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem2ActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jMenuItem2);
 
         menuItemEditCut.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.event.InputEvent.CTRL_MASK));
         menuItemEditCut.setText("Cut");
@@ -680,9 +691,6 @@ public class Editor extends javax.swing.JFrame {
             iohelpers.remove(activeTabIndex);
             activeTabIndex = tabbedPane.getSelectedIndex();
 
-            // there are multiple tab, when first tab is closed
-            // acitveTabIndex set to 0
-            // so ArrayIndexOfBoundException occur
             if (activeTabIndex != -1) {
                 IOHelper helper = iohelpers.get(activeTabIndex);
                 String path = helper.getPath();
@@ -1009,6 +1017,153 @@ public class Editor extends javax.swing.JFrame {
         Includes.showIncludes(helper.getPath());
     }//GEN-LAST:event_menuItemIncsShowDepsActionPerformed
 
+    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
+         JTextField findWhat = new JTextField();
+         JTextField replaceWith = new JTextField();
+         Object[] fields = {"Find What : ",findWhat,
+                            "Replace With : ", replaceWith};
+
+         JOptionPane.showConfirmDialog(null,fields,"Find & Replace",JOptionPane.OK_CANCEL_OPTION,JOptionPane.PLAIN_MESSAGE);
+         String findKey = findWhat.getText();
+         String targetValue = replaceWith.getText();
+
+         int activeTabIndex = tabbedPane.getSelectedIndex();
+                JTextPane activeTextPane = panes.get(activeTabIndex);
+
+                int caretPos = activeTextPane.getCaretPosition();
+                AbstractDocument doc =
+                        (AbstractDocument) activeTextPane.getDocument();
+
+                String text = null;
+                String fullText = null;
+
+                try {
+                    text = doc.getText(0, caretPos);
+                    fullText = doc.getText(0, doc.getLength());
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(Editor.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+
+
+         String changedText = replace(fullText,findKey,targetValue);
+         activeTextPane.setText(changedText);
+    }//GEN-LAST:event_jMenuItem2ActionPerformed
+
+    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+         int i = 0;
+
+        JTextField findWhat = new JTextField();
+         int option = JOptionPane.showConfirmDialog(null,findWhat,"Find & Replace",JOptionPane.OK_CANCEL_OPTION,JOptionPane.PLAIN_MESSAGE);
+         String targetValue = findWhat.getText();
+
+        int activeTabIndex = tabbedPane.getSelectedIndex();
+                JTextPane activeTextPane = panes.get(activeTabIndex);
+
+                int caretPos = activeTextPane.getCaretPosition();
+                AbstractDocument doc =
+                        (AbstractDocument) activeTextPane.getDocument();
+
+                String text = null;
+                String fullText = null;
+
+                try {
+                    text = doc.getText(0, caretPos);
+                    fullText = doc.getText(0, doc.getLength());
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(Editor.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+          ArrayList<Integer> indexes =  find(fullText,targetValue);
+         if(indexes == null)
+             JOptionPane.showMessageDialog(null,
+    "0 result Found",
+    "Couldn't Find",
+    JOptionPane.ERROR_MESSAGE);
+        while(option == JOptionPane.OK_OPTION){
+            if(i>=indexes.size())
+                i=0;
+              activeTextPane.setSelectionStart(indexes.get(i));
+              activeTextPane.setSelectionEnd(indexes.get(i)+targetValue.length());
+          ++i;
+          String oldValue = targetValue;
+           option = JOptionPane.showConfirmDialog(null,findWhat,"Find & Replace",JOptionPane.OK_CANCEL_OPTION,JOptionPane.PLAIN_MESSAGE);
+           targetValue = findWhat.getText();
+           if(oldValue!=targetValue){
+               indexes = find(targetValue);
+               if(indexes == null){
+             JOptionPane.showMessageDialog(null,
+            "0 result Found",
+            "Couldn't Find",
+             JOptionPane.ERROR_MESSAGE);
+               return;}
+           }
+        }
+        //JTextComponent.setSelectionStart(int), JTextComponent.setSelectionEnd(int)
+
+    }//GEN-LAST:event_jMenuItem1ActionPerformed
+
+    private ArrayList<Integer> find(String word){
+            int activeTabIndex = tabbedPane.getSelectedIndex();
+                JTextPane activeTextPane = panes.get(activeTabIndex);
+
+                int caretPos = activeTextPane.getCaretPosition();
+                AbstractDocument doc =
+                        (AbstractDocument) activeTextPane.getDocument();
+
+                String text = null;
+                String fullText = null;
+
+                try {
+                    text = doc.getText(0, caretPos);
+                    fullText = doc.getText(0, doc.getLength());
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(Editor.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return find(fullText,word);
+    }
+    /**
+     * This function find all indexes of word in document.
+     * @param document source for finding all indexes of word.
+     * @param word will be find its of all indexes in document.
+     * @return an array list of all indexes of given word in document.
+     */
+    private static  ArrayList<Integer> find(String document,String word) {
+        ArrayList<Integer> allIndex = new ArrayList<>();
+        int index = document.indexOf(word, 0);
+        while(index > -1) {
+            allIndex.add(index);
+            index =  document.indexOf(word,index + word.length());
+        }
+        if (allIndex.size() > 0)
+            return allIndex;
+        return null;
+    }
+    /**
+     * This function replace replaced string into all word strings in document.
+     * @param document
+     * @param word
+     * @param replaced
+     * @return changed string.
+     */
+    private static String replace(String document,String word,String replaced) {
+        String newString = new String("");
+        ArrayList<Integer> indexes = find(document, word);
+        int start = 0;
+        Character character;
+        if (indexes == null) return document;
+        for (Integer index : indexes) {
+            for (int i = start; i < index; ++i) {
+                character = document.charAt(i);
+                newString += character.toString();
+            }
+            newString += replaced;
+            start = index + word.length();
+        }
+        newString += document.substring(start);
+        return newString;
+    }
+
     /**
      * @param args the command line arguments
      */
@@ -1053,6 +1208,8 @@ public class Editor extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu5;
     private javax.swing.JMenu jMenu6;
     private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuItem1;
+    private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;

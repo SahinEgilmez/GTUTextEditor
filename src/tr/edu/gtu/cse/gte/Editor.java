@@ -14,8 +14,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.ListModel;
@@ -294,7 +296,7 @@ public class Editor extends javax.swing.JFrame {
         return lines;
     }
 
-    void takeBackUp() {
+    synchronized void takeBackUp() {
 
         new Thread(new Runnable() {
             @Override
@@ -348,8 +350,8 @@ public class Editor extends javax.swing.JFrame {
         jMenu1 = new javax.swing.JMenu();
         menuItemFileNew = new javax.swing.JMenuItem();
         menuItemFileOpen = new javax.swing.JMenuItem();
-        jSeparator1 = new javax.swing.JPopupMenu.Separator();
         menuItemFileOpenInDir = new javax.swing.JMenuItem();
+        jSeparator1 = new javax.swing.JPopupMenu.Separator();
         menuItemFileSave = new javax.swing.JMenuItem();
         menuItemFileSaveAs = new javax.swing.JMenuItem();
         menuItemFileClose = new javax.swing.JMenuItem();
@@ -374,6 +376,7 @@ public class Editor extends javax.swing.JFrame {
         jMenu4 = new javax.swing.JMenu();
         menuItemIncsShowDeps = new javax.swing.JMenuItem();
         jMenu5 = new javax.swing.JMenu();
+        menuItemAboutAbout = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("GTU Text Editor");
@@ -452,7 +455,6 @@ public class Editor extends javax.swing.JFrame {
             }
         });
         jMenu1.add(menuItemFileOpen);
-        jMenu1.add(jSeparator1);
 
         menuItemFileOpenInDir.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_T, java.awt.event.InputEvent.CTRL_MASK));
         menuItemFileOpenInDir.setText("Open In Directory");
@@ -462,6 +464,7 @@ public class Editor extends javax.swing.JFrame {
             }
         });
         jMenu1.add(menuItemFileOpenInDir);
+        jMenu1.add(jSeparator1);
 
         menuItemFileSave.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_MASK));
         menuItemFileSave.setText("Save");
@@ -480,6 +483,7 @@ public class Editor extends javax.swing.JFrame {
         });
         jMenu1.add(menuItemFileSaveAs);
 
+        menuItemFileClose.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.CTRL_MASK));
         menuItemFileClose.setText("Close");
         menuItemFileClose.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -609,6 +613,15 @@ public class Editor extends javax.swing.JFrame {
         jMenuBar1.add(jMenu4);
 
         jMenu5.setText("About");
+
+        menuItemAboutAbout.setText("About");
+        menuItemAboutAbout.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemAboutAboutActionPerformed(evt);
+            }
+        });
+        jMenu5.add(menuItemAboutAbout);
+
         jMenuBar1.add(jMenu5);
 
         setJMenuBar(jMenuBar1);
@@ -1150,6 +1163,32 @@ public class Editor extends javax.swing.JFrame {
 
     }//GEN-LAST:event_menuItemFileOpenInDirActionPerformed
 
+    private void menuItemAboutAboutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemAboutAboutActionPerformed
+        JFrame frame = new JFrame("About");
+
+        JTextArea aboutText = new JTextArea("Bu proje Gebze Teknik Üniversitesi Bilgisayar Mühendisliği\n"
+                + "Veri Yapıları ve Algoritmalar dersi kapsamında\n"
+                + "geliştirilmiştir. Proje metin düzenleyicisi olup bütün\n"
+                + "metin dosyalarını ve programlama dilleri olarak da\n"
+                + "C ve C++ dillerini desteklemektedir.\n\n"
+                + "Bu projenin  amacı öncelikle veri yapılarını uygun olan\n"
+                + "yerlerde kullanarak bir proje geliştirilmesidir.\n"
+                + "Ayrıca programlamaya yeni başlamış olan geliştiricilerin\n"
+                + "hızlı ve daha kolay program yazabilmelerini sağlamaktır.\n\n"
+                + "Emeği geçenler:\n"
+                + "Enes GÖNÜLTAŞ\n"
+                + "Bayram Utku UZUNLAR\n"
+                + "Şahin EĞİLMEZ\n"
+                + "Efkan DURAKLI\n"
+                + "Burak ÖZDEMİR\n"
+                + "Cengiz TOPRAK\n"
+        );
+        aboutText.setEditable(false);
+        frame.getContentPane().add(aboutText);
+        frame.pack();
+        frame.setVisible(true);
+    }//GEN-LAST:event_menuItemAboutAboutActionPerformed
+
     private ArrayList<Integer> find(String word){
             int activeTabIndex = tabbedPane.getSelectedIndex();
                 JTextPane activeTextPane = panes.get(activeTabIndex);
@@ -1268,6 +1307,7 @@ public class Editor extends javax.swing.JFrame {
     private javax.swing.JSplitPane jSplitPane2;
     private javax.swing.JSplitPane jSplitPane3;
     private javax.swing.JTextArea jTextArea1;
+    private javax.swing.JMenuItem menuItemAboutAbout;
     private javax.swing.JMenuItem menuItemEditCopy;
     private javax.swing.JMenuItem menuItemEditCut;
     private javax.swing.JMenuItem menuItemEditPaste;

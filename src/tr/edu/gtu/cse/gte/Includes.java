@@ -28,6 +28,7 @@ public class Includes extends JDialog {
         File tempFile = new File(filePath);
         File parentDir = tempFile.getParentFile();
 
+        // add vertices
         for (String fileName : parentDir.list()) {
             if (fileName.endsWith(".c")
                     || fileName.endsWith(".cpp")

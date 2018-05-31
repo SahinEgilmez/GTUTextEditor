@@ -4,6 +4,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -339,15 +340,16 @@ public class Editor extends javax.swing.JFrame {
         jScrollPane4 = new javax.swing.JScrollPane();
         fileStructure = new javax.swing.JTree();
         jSplitPane3 = new javax.swing.JSplitPane();
-        jScrollPane3 = new javax.swing.JScrollPane();
-        jTextArea1 = new javax.swing.JTextArea();
         jScrollPane1 = new javax.swing.JScrollPane();
         suggestionList = new javax.swing.JList<>();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        jTextArea1 = new javax.swing.JTextArea();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         menuItemFileNew = new javax.swing.JMenuItem();
         menuItemFileOpen = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
+        menuItemFileOpenInDir = new javax.swing.JMenuItem();
         menuItemFileSave = new javax.swing.JMenuItem();
         menuItemFileSaveAs = new javax.swing.JMenuItem();
         menuItemFileClose = new javax.swing.JMenuItem();
@@ -355,16 +357,13 @@ public class Editor extends javax.swing.JFrame {
         menuItemFileExit = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
         menuItemEditUndo = new javax.swing.JMenuItem();
-        menuItemEditRedo = new javax.swing.JMenuItem();
         jSeparator3 = new javax.swing.JPopupMenu.Separator();
         jMenuItem1 = new javax.swing.JMenuItem();
         jMenuItem2 = new javax.swing.JMenuItem();
+        jSeparator4 = new javax.swing.JPopupMenu.Separator();
         menuItemEditCut = new javax.swing.JMenuItem();
         menuItemEditCopy = new javax.swing.JMenuItem();
         menuItemEditPaste = new javax.swing.JMenuItem();
-        menuItemEditDelete = new javax.swing.JMenuItem();
-        jSeparator4 = new javax.swing.JPopupMenu.Separator();
-        menuItemEditSelectAll = new javax.swing.JMenuItem();
         jMenu3 = new javax.swing.JMenu();
         menuItemRunRunFile = new javax.swing.JMenuItem();
         menuItemRunGenCode = new javax.swing.JMenuItem();
@@ -398,7 +397,6 @@ public class Editor extends javax.swing.JFrame {
 
         javax.swing.tree.DefaultMutableTreeNode treeNode1 = new javax.swing.tree.DefaultMutableTreeNode("root");
         fileStructure.setModel(new javax.swing.tree.DefaultTreeModel(treeNode1));
-        fileStructure.setToolTipText("");
         fileStructure.setAutoscrolls(true);
         fileStructure.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         fileStructure.setDebugGraphicsOptions(javax.swing.DebugGraphics.BUFFERED_OPTION);
@@ -419,6 +417,10 @@ public class Editor extends javax.swing.JFrame {
         jSplitPane3.setDividerLocation(150);
         jSplitPane3.setResizeWeight(0.1);
 
+        jScrollPane1.setViewportView(suggestionList);
+
+        jSplitPane3.setLeftComponent(jScrollPane1);
+
         jTextArea1.setColumns(20);
         jTextArea1.setLineWrap(true);
         jTextArea1.setRows(5);
@@ -428,10 +430,6 @@ public class Editor extends javax.swing.JFrame {
         jScrollPane3.setViewportView(jTextArea1);
 
         jSplitPane3.setRightComponent(jScrollPane3);
-
-        jScrollPane1.setViewportView(suggestionList);
-
-        jSplitPane3.setLeftComponent(jScrollPane1);
 
         jSplitPane2.setBottomComponent(jSplitPane3);
 
@@ -455,6 +453,15 @@ public class Editor extends javax.swing.JFrame {
         });
         jMenu1.add(menuItemFileOpen);
         jMenu1.add(jSeparator1);
+
+        menuItemFileOpenInDir.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_T, java.awt.event.InputEvent.CTRL_MASK));
+        menuItemFileOpenInDir.setText("Open In Directory");
+        menuItemFileOpenInDir.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemFileOpenInDirActionPerformed(evt);
+            }
+        });
+        jMenu1.add(menuItemFileOpenInDir);
 
         menuItemFileSave.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_MASK));
         menuItemFileSave.setText("Save");
@@ -503,10 +510,6 @@ public class Editor extends javax.swing.JFrame {
             }
         });
         jMenu2.add(menuItemEditUndo);
-
-        menuItemEditRedo.setText("Redo");
-        menuItemEditRedo.setEnabled(false);
-        jMenu2.add(menuItemEditRedo);
         jMenu2.add(jSeparator3);
 
         jMenuItem1.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, java.awt.event.InputEvent.CTRL_MASK));
@@ -526,6 +529,7 @@ public class Editor extends javax.swing.JFrame {
             }
         });
         jMenu2.add(jMenuItem2);
+        jMenu2.add(jSeparator4);
 
         menuItemEditCut.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.event.InputEvent.CTRL_MASK));
         menuItemEditCut.setText("Cut");
@@ -538,17 +542,6 @@ public class Editor extends javax.swing.JFrame {
         menuItemEditPaste.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_V, java.awt.event.InputEvent.CTRL_MASK));
         menuItemEditPaste.setText("Paste");
         jMenu2.add(menuItemEditPaste);
-
-        menuItemEditDelete.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_DELETE, 0));
-        menuItemEditDelete.setText("Delete");
-        menuItemEditDelete.setEnabled(false);
-        jMenu2.add(menuItemEditDelete);
-        jMenu2.add(jSeparator4);
-
-        menuItemEditSelectAll.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_A, java.awt.event.InputEvent.CTRL_MASK));
-        menuItemEditSelectAll.setText("Select All");
-        menuItemEditSelectAll.setEnabled(false);
-        jMenu2.add(menuItemEditSelectAll);
 
         jMenuBar1.add(jMenu2);
 
@@ -862,7 +855,6 @@ public class Editor extends javax.swing.JFrame {
             } catch (BadLocationException ex) {
                 ex.printStackTrace();
             }
-//            String path=helper.getPath();
             if (path != null) {
                 FileStructure fileStructures = new FileStructure();
                 FileTreeModel model = fileStructures.getModel(path);
@@ -1099,6 +1091,65 @@ public class Editor extends javax.swing.JFrame {
 
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
+    private void menuItemFileOpenInDirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemFileOpenInDirActionPerformed
+        int activeTabIndex = tabbedPane.getSelectedIndex();
+        IOHelper helper = iohelpers.get(activeTabIndex);
+
+        if (helper.getPath() != null) {
+            String key = JOptionPane.showInputDialog("Enter a file name");
+
+            File tempFile = new File(helper.getPath());
+            File parentDir = tempFile.getParentFile();
+
+            BinarySearchTree<String> bst = new BinarySearchTree<>();
+            for (String fileName : parentDir.list()) {
+                bst.add(fileName);
+            }
+
+            String targetFile = bst.find(key);
+            if (targetFile != null) {
+                File tf = new File(parentDir, targetFile);
+                String path = tf.getPath();
+                addANewTab();
+                // open a file and read its contents
+                activeTabIndex = tabbedPane.getSelectedIndex();
+                helper = iohelpers.get(activeTabIndex);
+                ArrayList<String> lines = helper.open(path);
+
+
+                if (lines != null) {
+                    try {
+                        String text = "";
+                        // build text
+                        for (String line : lines) {
+                            text += line;
+                        }
+
+                        JTextPane activeTextPane = panes.get(activeTabIndex);
+                        tabbedPane.setTitleAt(activeTabIndex, helper.getFileName());
+
+                        // insert text
+                        AbstractDocument doc
+                                = (AbstractDocument) activeTextPane.getDocument();
+                        doc.insertString(0, text, null);
+                    } catch (BadLocationException ex) {
+                        ex.printStackTrace();
+                    }
+                    if (path != null) {
+                        FileStructure fileStructures = new FileStructure();
+                        FileTreeModel model = fileStructures.getModel(path);
+                        fileStructure.setModel(model);
+                    }
+                } else {
+                    panes.remove(activeTabIndex);
+                    iohelpers.remove(activeTabIndex);
+                    tabbedPane.remove(activeTabIndex);
+                }
+            }
+        }
+
+    }//GEN-LAST:event_menuItemFileOpenInDirActionPerformed
+
     private ArrayList<Integer> find(String word){
             int activeTabIndex = tabbedPane.getSelectedIndex();
                 JTextPane activeTextPane = panes.get(activeTabIndex);
@@ -1219,15 +1270,13 @@ public class Editor extends javax.swing.JFrame {
     private javax.swing.JTextArea jTextArea1;
     private javax.swing.JMenuItem menuItemEditCopy;
     private javax.swing.JMenuItem menuItemEditCut;
-    private javax.swing.JMenuItem menuItemEditDelete;
     private javax.swing.JMenuItem menuItemEditPaste;
-    private javax.swing.JMenuItem menuItemEditRedo;
-    private javax.swing.JMenuItem menuItemEditSelectAll;
     private javax.swing.JMenuItem menuItemEditUndo;
     private javax.swing.JMenuItem menuItemFileClose;
     private javax.swing.JMenuItem menuItemFileExit;
     private javax.swing.JMenuItem menuItemFileNew;
     private javax.swing.JMenuItem menuItemFileOpen;
+    private javax.swing.JMenuItem menuItemFileOpenInDir;
     private javax.swing.JMenuItem menuItemFileSave;
     private javax.swing.JMenuItem menuItemFileSaveAs;
     private javax.swing.JMenuItem menuItemIncsShowDeps;

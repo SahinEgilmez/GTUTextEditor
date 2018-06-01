@@ -1,6 +1,7 @@
 #include <iostream>
 
 void area_of_rectangle(int a, int b) {
+    std::cout << "a: " << a << " b: " << b << std::endl;  // debug
     std::cout << "area: " << a*b << std::endl;
 }
 
